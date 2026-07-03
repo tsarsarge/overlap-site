@@ -641,9 +641,19 @@
         <div class="footnote" style="text-align:center" id="cmpFee30"></div>
       </div>
       <div class="panel">
+        <h2>What exactly overlaps</h2>
+        <div class="sub">The same stocks, held by both funds — this is the money you've doubled up on. Based on each fund's top holdings.</div>
+        <div id="cmpShared"></div>
+      </div>
+      <div class="panel">
         <h2>Sector tilt, side by side</h2>
         <div class="sub">Bars reach toward the fund that holds more of the sector. Mirror images = redundant funds.</div>
         <div id="cmpBars"></div>
+      </div>
+      <div class="panel">
+        <h2>How to de-risk this pair</h2>
+        <div class="sub">Specific moves, in order of impact. Educational analytics, not personal advice.</div>
+        <div id="cmpFix"></div>
       </div>
     </div>
   </div>
@@ -1923,8 +1933,81 @@ function runCompare(){
       <span class="num">${wb.toFixed(0)}%</span></div>`;
   });
   document.getElementById("cmpBars").innerHTML=`<div class="bf-head"><span style="text-align:right;color:var(--green)">${a}</span><span></span><span style="color:var(--ochre)">${b}</span></div>`+rows;
+
+  renderSharedHoldings(a,b,A,B);
+  renderMitigation(a,b,A,B,pct,cheaper,diff);
   document.getElementById("cmpResults").classList.remove("hidden");
   document.getElementById("cmpResults").scrollIntoView({behavior:"smooth"});
+}
+
+function nameOf(t){return STOCKS[t]?STOCKS[t].n:(ETFS[t]?ETFS[t].n:t);}
+function renderSharedHoldings(a,b,A,B){
+  const el=document.getElementById("cmpShared");
+  const hA=A.h||{},hB=B.h||{};
+  if(!Object.keys(hA).length||!Object.keys(hB).length){
+    const missing=!Object.keys(hA).length?a:b;
+    el.innerHTML=`<div class="footnote">Position-level holdings for <b>${missing}</b> aren't in the dataset yet (bond, international, and commodity funds get holdings detail in the v2 data pipeline). The overlap figure above uses category-level analysis instead.</div>`;
+    return;
+  }
+  const shared=Object.keys(hA).filter(k=>hB[k]!==undefined).map(k=>[k,hA[k],hB[k]]).sort((x,y)=>Math.min(y[1],y[2])-Math.min(x[1],x[2]));
+  if(shared.length===0){
+    el.innerHTML=`<div class="finding f-ok"><span class="tag">Clean</span>No shared names among the top holdings of ${a} and ${b}. Whatever overlap exists is in the long tail, at small weights.</div>`;
+    return;
+  }
+  const sumMin=shared.reduce((s,[,wa,wb])=>s+Math.min(wa,wb),0);
+  const top=shared[0];
+  const rows=shared.map(([t,wa,wb])=>{
+    const both5050=((wa+wb)/2);
+    return `<tr><td><b class="mono">${t}</b> <span class="footnote">${nameOf(t)}</span></td>
+      <td class="num">${wa.toFixed(1)}%</td><td class="num">${wb.toFixed(1)}%</td>
+      <td class="num">${both5050.toFixed(1)}%</td></tr>`;
+  }).join("");
+  const uniqA=Object.keys(hA).filter(k=>hB[k]===undefined).slice(0,4);
+  const uniqB=Object.keys(hB).filter(k=>hA[k]===undefined).slice(0,4);
+  el.innerHTML=`
+    <table><thead><tr><th>Shared position</th><th>In ${a}</th><th>In ${b}</th><th>If you split 50/50</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="finding f-amber" style="margin-top:14px"><span class="tag">The receipt</span>
+      Among top holdings alone, at least <b>${sumMin.toFixed(1)}%</b> of these funds is literally the same positions.
+      Biggest double-up: <b>${top[0]}</b> — a 50/50 split of this pair puts <b>${((top[1]+top[2])/2).toFixed(1)}%</b> of your money in one company from just these two funds.</div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:10px">
+      <div class="footnote" style="flex:1;min-width:220px"><b style="color:var(--ink)">What ${a} adds that ${b} doesn't:</b><br>${uniqA.length?uniqA.map(t=>`${t} (${nameOf(t)})`).join(" · "):"nothing distinctive in its top holdings"}</div>
+      <div class="footnote" style="flex:1;min-width:220px"><b style="color:var(--ink)">What ${b} adds that ${a} doesn't:</b><br>${uniqB.length?uniqB.map(t=>`${t} (${nameOf(t)})`).join(" · "):"nothing distinctive in its top holdings"}</div>
+    </div>
+    <div class="footnote" style="margin-top:10px">Based on top-10 holdings; smaller positions overlap too. The v2 pipeline (full holdings) makes this table exhaustive.</div>`;
+}
+
+function pickComplement(a,b,A,B){
+  const cats=(A.cls+" "+B.cls);
+  const candidates=[];
+  if(!/International|Global/.test(cats))candidates.push(["VXUS","international stocks — ~0.05% fee and thousands of non-US companies this pair completely ignores"]);
+  if(!/Bonds/.test(cats))candidates.push(["BND","bonds — the ballast that held up in 2008 and 2020 when equity pairs like this fell together"]);
+  if(/Growth|Tech|Semis|Thematic/.test(cats))candidates.push(["SCHD","dividend/value — the style opposite of this pair, with only ~16% overlap to the S&P 500"]);
+  if(/Dividend|Value/.test(cats))candidates.push(["VUG","large-cap growth — balances the value tilt without re-buying what you have"]);
+  candidates.push(["VNQ","real estate — historically lower correlation to broad equities than any sector fund"]);
+  return candidates.find(([t])=>t!==a&&t!==b)||["VT","the whole world in one fund"];
+}
+function renderMitigation(a,b,A,B,pct,cheaper,diff){
+  const el=document.getElementById("cmpFix");
+  const expensive=cheaper===a?b:cheaper===b?a:null;
+  const [comp,compWhy]=pickComplement(a,b,A,B);
+  const feePer10k=Math.round(diff*100);
+  const moves=[];
+  if(pct>70){
+    if(expensive)moves.push(`<b>Consolidate into ${cheaper}.</b> These are ~${pct}% the same fund; ${expensive} charges ${diff.toFixed(2)}% more for it. Selling ${expensive} and buying ${cheaper} keeps your exposure identical and saves <b>$${feePer10k}/yr per $10,000</b> — every year, compounding.`);
+    else moves.push(`<b>Pick one — either one.</b> They're ~${pct}% identical and the fees match, so this is purely about simplification: one line item, one thing to rebalance.`);
+    moves.push(`<b>In a taxable account, don't sell — redirect.</b> If ${expensive||"the fund you drop"} carries big unrealized gains, keep it and point <i>all new money</i> at ${cheaper||"the keeper"}. Same destination, no tax bill, just slower.`);
+    moves.push(`<b>Upgrade the redundancy to real diversification.</b> The money you had in the duplicate could become <b class="mono">${comp}</b>: ${compWhy}. That turns a fund that added nothing into one that actually changes your risk.`);
+  }else if(pct>40){
+    moves.push(`<b>Give each fund a job, in writing.</b> A defensible setup: ${a} as the core, ${b} as a deliberate tilt capped at 15–20% of the portfolio. If you can't say what ${b}'s job is in one sentence, it doesn't have one.`);
+    moves.push(`<b>Watch the double-counted names.</b> The shared-positions table above shows where these funds stack — check the same names in <a href="#/analyzer">the Analyzer</a> to see your true single-stock totals across everything you own.`);
+    moves.push(`<b>Add the missing piece before adding more of the same.</b> Anything new should overlap <i>neither</i> fund: <b class="mono">${comp}</b> — ${compWhy}.`);
+  }else{
+    moves.push(`<b>This pair already works.</b> At ~${pct}% overlap these funds genuinely diversify each other — the classic structure is a core/satellite split (e.g., 70/30 or 60/40) rebalanced once or twice a year.`);
+    moves.push(`<b>Mind the fee gap anyway.</b> ${diff>0.05?`${expensive} costs ${diff.toFixed(2)}% more — fine if its role justifies it, but know you're paying it.`:"Fees are close enough to ignore. Rare and pleasant."}`);
+    moves.push(`<b>Set rebalancing bands, then leave it alone.</b> ±5% per fund. The main risk to a good pair isn't the market — it's tinkering.`);
+  }
+  el.innerHTML=moves.map((m,i)=>`<div class="sugg"><span class="n">${i+1}.</span><div>${m}</div></div>`).join("")+
+    `<div class="footnote" style="margin-top:8px">Run your full portfolio through <a href="#/analyzer">the Analyzer</a> for a rebalancing plan that accounts for everything you hold, not just this pair.</div>`;
 }
 
 /* ============ PULSE (simulated) ============ */
