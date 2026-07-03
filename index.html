@@ -1,0 +1,2231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overlap — You probably own the same stock five times</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#f7f3ec; --paper2:#efe9de; --ink:#16130e; --ink2:#4a443a;
+    --green:#1e6f50; --red:#b3382c; --ochre:#b07d2a; --rule:#d8d1c3;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55}
+  .serif{font-family:Georgia,"Times New Roman",serif}
+  .mono{font-family:"SF Mono",Menlo,Consolas,monospace}
+  a{color:var(--ink)}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 20px}
+
+  /* ---------- masthead ---------- */
+  .strip{background:var(--ink);color:#b8b2a6;font-size:11.5px;letter-spacing:.05em;padding:6px 20px;text-align:center}
+  .strip b{color:var(--paper)}
+  .topbar{border-bottom:2px solid var(--ink);background:var(--paper);position:sticky;top:0;z-index:50}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;max-width:1060px;margin:0 auto}
+  .wordmark{font-family:Georgia,serif;font-size:26px;font-weight:700;letter-spacing:-.5px;text-decoration:none}
+  .wordmark em{font-style:italic;color:var(--green)}
+  .wordmark .ed{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);font-family:-apple-system,sans-serif;font-weight:600;vertical-align:super;margin-left:4px}
+  nav{display:flex;gap:4px;flex-wrap:wrap}
+  nav a{text-decoration:none;font-size:13.5px;padding:6px 12px;color:var(--ink2);letter-spacing:.02em}
+  nav a.active{color:var(--ink);border-bottom:2px solid var(--green);font-weight:600}
+  nav a:hover{color:var(--ink)}
+  .nav-cta{background:var(--ink);color:var(--paper)!important;font-weight:600;margin-left:8px}
+  .nav-cta:hover{background:var(--green)}
+  .dd{position:relative;display:inline-block}
+  .dd-btn{background:none;border:none;cursor:pointer;font-family:inherit;font-size:13.5px;padding:6px 12px;color:var(--ink2);letter-spacing:.02em}
+  .dd-btn:hover{color:var(--ink)}
+  .dd-btn.active{color:var(--ink);border-bottom:2px solid var(--green);font-weight:600}
+  .dd-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--paper);border:1.5px solid var(--ink);min-width:190px;z-index:60;box-shadow:4px 4px 0 var(--paper2)}
+  .dd.open .dd-menu{display:block}
+  .dd-menu a{display:block;padding:11px 15px;border-bottom:1px solid var(--rule);font-size:13.5px;text-decoration:none;color:var(--ink)}
+  .dd-menu a:last-child{border-bottom:none}
+  .dd-menu a:hover{background:var(--ink);color:var(--paper)}
+
+  /* ---------- shared ---------- */
+  section.page{display:none;padding-bottom:60px}
+  section.page.on{display:block}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);font-weight:700;margin-bottom:10px}
+  h1{font-family:Georgia,serif;font-weight:700;letter-spacing:-1px;line-height:1.08}
+  h2.section-h{font-family:Georgia,serif;font-size:28px;letter-spacing:-.5px;margin-bottom:6px}
+  .rule{border:none;border-top:1px solid var(--rule);margin:36px 0}
+  .rule-heavy{border:none;border-top:2px solid var(--ink);margin:0 0 28px}
+  .btn{display:inline-block;background:var(--ink);color:var(--paper);border:none;padding:13px 26px;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;letter-spacing:.01em}
+  .btn:hover{background:var(--green)}
+  .btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+  .btn-outline:hover{background:var(--ink);color:var(--paper)}
+  .smallcaps{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);font-weight:600}
+  .footnote{font-size:12.5px;color:var(--ink2);line-height:1.6}
+  input,select{background:#fff;border:1.5px solid var(--ink);color:var(--ink);padding:10px 12px;font-size:15px;font-family:inherit;border-radius:0;outline:none}
+  input:focus,select:focus{border-color:var(--green);box-shadow:2px 2px 0 var(--green)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);padding:8px 10px;border-bottom:2px solid var(--ink)}
+  td{padding:10px;border-bottom:1px solid var(--rule);vertical-align:top}
+  .num{font-family:"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  .stamp{display:inline-block;border:3px double currentColor;font-family:Georgia,serif;font-weight:800;padding:4px 16px;transform:rotate(-5deg);letter-spacing:.06em;text-transform:uppercase}
+
+  /* ---------- home ---------- */
+  .hero{padding:72px 0 48px;display:grid;grid-template-columns:7fr 5fr;gap:48px;align-items:center}
+  @media(max-width:800px){.hero{grid-template-columns:1fr;padding:44px 0 32px}}
+  .hero h1{font-size:54px;margin-bottom:20px}
+  @media(max-width:800px){.hero h1{font-size:38px}}
+  .hero p.lede{font-size:19px;color:var(--ink2);margin-bottom:28px;line-height:1.6}
+  .hero-fig{border:1.5px solid var(--ink);background:#fff;padding:22px;box-shadow:6px 6px 0 var(--paper2);position:relative}
+  .fig-cap{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+  .fig-row{display:grid;grid-template-columns:64px 1fr 46px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--rule);font-size:13.5px}
+  .fig-row:last-of-type{border-bottom:none}
+  .fig-bar{height:13px;background:var(--paper2);border:1px solid var(--rule);position:relative}
+  .fig-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--green);opacity:.85}
+  .fig-bar em{position:absolute;left:0;top:0;bottom:0;background:repeating-linear-gradient(45deg,var(--red),var(--red) 3px,transparent 3px,transparent 6px);opacity:.8}
+  .fig-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:2px solid var(--ink)}
+  .margin-note{font-family:Georgia,serif;font-style:italic;color:var(--red);font-size:14px;transform:rotate(-2deg);display:inline-block}
+  .tape{border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);overflow:hidden;white-space:nowrap;padding:11px 0;background:#0d0b08}
+  .tape-inner{display:inline-block;animation:tape 45s linear infinite;font-family:"SF Mono",Menlo,monospace;font-size:13px;color:#7a746a}
+  .tape:hover .tape-inner{animation-play-state:paused}
+  .tk-sym{color:#f7f3ec;font-weight:700}
+  .tk-up{color:#4ec97a}
+  .tk-dn{color:#e05d51}
+  .tk-sep{color:#3a352c;margin:0 18px}
+  @keyframes tape{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .roast-strip{border:1.5px dashed var(--ink);margin-top:30px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;background:#fff}
+  .roast-strip .rs-h{font-family:Georgia,serif;font-size:20px;font-weight:700;letter-spacing:-.3px}
+  .roast-strip p{font-size:13.5px;color:var(--ink2);max-width:560px;margin-top:3px}
+  .cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+  @media(max-width:800px){.cols3{grid-template-columns:1fr}}
+  .col{padding:28px 24px;border-right:1px solid var(--rule)}
+  .col:last-child{border-right:none}
+  @media(max-width:800px){.col{border-right:none;border-bottom:1px solid var(--rule)}}
+  .col .no{font-family:Georgia,serif;font-size:15px;color:var(--green);font-weight:700;margin-bottom:10px}
+  .col h3{font-family:Georgia,serif;font-size:20px;margin-bottom:8px;letter-spacing:-.3px}
+  .col p{font-size:14.5px;color:var(--ink2)}
+  .col a{font-size:13.5px;font-weight:600;color:var(--green)}
+  .desk-note{max-width:640px;margin:0 auto;padding:8px 0}
+  .desk-note p{font-family:Georgia,serif;font-size:18.5px;line-height:1.75;margin-bottom:16px}
+  .desk-note .sig{font-family:Georgia,serif;font-style:italic;font-size:17px;color:var(--ink2)}
+  .case-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+  @media(max-width:860px){.case-grid{grid-template-columns:1fr}}
+  .case{border:1.5px solid var(--ink);background:#fff;padding:20px;position:relative;box-shadow:5px 5px 0 var(--paper2)}
+  .case .case-no{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);font-weight:700}
+  .case h3{font-family:Georgia,serif;font-size:20px;letter-spacing:-.3px;margin:6px 0 10px}
+  .case p{font-size:13.5px;color:var(--ink2);margin-bottom:12px}
+  .case .scores{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-family:"SF Mono",Menlo,monospace}
+  .case .scores .old{font-size:20px;color:var(--red);text-decoration:line-through;text-decoration-thickness:2px}
+  .case .scores .arrow{color:var(--ink2)}
+  .case .scores .new{font-size:26px;font-weight:700;color:var(--green)}
+  .case .scores .lab{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+  .case .outcome{border-top:2px solid var(--ink);padding-top:10px;font-size:13.5px;font-weight:700;color:var(--green)}
+  .home-cta{background:var(--ink);color:var(--paper);padding:52px 32px;text-align:center;margin-top:8px}
+  .home-cta h2{font-family:Georgia,serif;font-size:32px;letter-spacing:-.5px;margin-bottom:10px}
+  .home-cta p{color:#b8b2a6;margin-bottom:24px}
+  .home-cta .btn{background:var(--paper);color:var(--ink)}
+  .home-cta .btn:hover{background:var(--green);color:var(--paper)}
+
+  /* ---------- analyzer ---------- */
+  .page-head{padding:44px 0 24px}
+  .page-head h1{font-size:38px;margin-bottom:8px}
+  .page-head p{color:var(--ink2);max-width:640px}
+  .panel{border:1.5px solid var(--ink);background:#fff;padding:24px;margin-bottom:22px}
+  .panel h2{font-family:Georgia,serif;font-size:21px;letter-spacing:-.3px;margin-bottom:4px}
+  .panel h2 .pno{color:var(--green);font-size:15px;margin-right:8px;font-style:italic}
+  .panel .sub{font-size:13px;color:var(--ink2);margin-bottom:16px}
+  .ledger{border:1.5px solid var(--ink)}
+  .ledger-head{display:grid;grid-template-columns:130px 150px 1fr 40px;background:var(--ink);color:var(--paper);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:8px 12px;gap:10px}
+  .hrow{display:grid;grid-template-columns:130px 150px 1fr 40px;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--rule)}
+  .hrow:nth-child(even){background:var(--paper)}
+  .hrow input{border-width:1px;padding:8px 10px}
+  .ticker-in{text-transform:uppercase;font-family:"SF Mono",Menlo,monospace;font-weight:600}
+  .btn-x{background:none;border:none;color:var(--ink2);cursor:pointer;font-size:16px;padding:4px}
+  .btn-x:hover{color:var(--red)}
+  .row-info{font-size:12.5px;color:var(--ink2);font-style:italic}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+  .chip{background:none;border:1px solid var(--ink);padding:5px 13px;font-size:12.5px;cursor:pointer;font-weight:600}
+  .chip:hover{background:var(--ink);color:var(--paper)}
+  .chip.on{background:var(--ink);color:var(--paper)}
+  .addrow{background:none;border:none;border-top:1px dashed var(--ink2);color:var(--ink2);padding:10px;font-size:13px;cursor:pointer;width:100%;text-align:left}
+  .addrow:hover{color:var(--ink)}
+  details.apibox{margin-top:14px}
+  details.apibox summary{cursor:pointer;font-size:13px;color:var(--ink2)}
+  details.apibox input{width:100%;margin-top:8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .report-head{border:1.5px solid var(--ink);border-bottom:none;background:var(--paper2);padding:14px 24px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+  .report-head .rh-title{font-family:Georgia,serif;font-size:22px;font-weight:700;letter-spacing:-.4px}
+  .report-head .rh-meta{font-size:12px;color:var(--ink2);letter-spacing:.04em}
+  .score-flex{display:flex;align-items:center;justify-content:center;gap:34px;padding:12px 0;flex-wrap:wrap}
+  .gauge{position:relative;width:210px}
+  .gauge svg{display:block;width:100%}
+  .gauge .gnum{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-family:Georgia,serif;font-size:44px;font-weight:700;letter-spacing:-1px;line-height:1}
+  .gauge .gnum small{font-size:16px;color:var(--ink2);letter-spacing:0}
+  .verdict{font-family:Georgia,serif;font-style:italic;font-size:17px;margin-top:14px;text-align:center}
+  .finding{padding:10px 14px;border-left:3px solid var(--rule);margin-bottom:10px;font-size:14px}
+  .finding.f-red{border-left-color:var(--red);background:rgba(179,56,44,.05)}
+  .finding.f-amber{border-left-color:var(--ochre);background:rgba(176,125,42,.06)}
+  .finding.f-ok{border-left-color:var(--green);background:rgba(30,111,80,.05)}
+  .finding .tag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;display:block;margin-bottom:2px}
+  .f-red .tag{color:var(--red)}.f-amber .tag{color:var(--ochre)}.f-ok .tag{color:var(--green)}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:13px}
+  .bar-name{width:150px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-name b{color:var(--ink);font-family:"SF Mono",Menlo,monospace}
+  .bar-track{flex:1;height:17px;background:var(--paper2);border:1px solid var(--rule);position:relative}
+  .bar-fill{height:100%}
+  .bar-track .inpct{position:absolute;right:6px;top:0;bottom:0;display:flex;align-items:center;font-size:10.5px;color:var(--ink2);font-family:"SF Mono",Menlo,monospace}
+  .bar-pct{width:54px;text-align:right}
+  .chart-wrap{max-width:290px;margin:0 auto}
+  .ov-row{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule)}
+  .ov-row:last-child{border-bottom:none}
+  .ov-pair{font-weight:700;font-size:15px;min-width:130px}
+  .ov-meter{height:12px;background:var(--paper2);border:1px solid var(--rule);position:relative}
+  .ov-meter i{position:absolute;left:0;top:0;bottom:0}
+  .ov-note{font-size:12.5px;color:var(--ink2)}
+  .ov-num{font-family:"SF Mono",Menlo,monospace;font-weight:700;font-size:17px;text-align:right;min-width:64px}
+  .verdict-pill{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:2px 8px;border:1px solid currentColor;margin-left:8px;white-space:nowrap}
+  .fee-big{font-family:Georgia,serif;font-size:40px;font-weight:700}
+  .sugg{display:flex;gap:14px;padding:14px;border:1px solid var(--rule);margin-bottom:10px;font-size:14px;background:#fff}
+  .sugg .n{font-family:Georgia,serif;font-weight:700;color:var(--green);font-size:18px;min-width:20px}
+  .locked{position:relative}
+  .locked .blurred{filter:blur(5px);user-select:none;pointer-events:none}
+  .lock-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(247,243,236,.6)}
+  .pro-tag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--paper);background:var(--ink);padding:3px 9px;vertical-align:middle}
+  .hidden{display:none}
+
+  /* ---------- compare ---------- */
+  .duel{display:grid;grid-template-columns:1fr 90px 1fr;gap:0;align-items:stretch;margin-bottom:22px}
+  @media(max-width:700px){.duel{grid-template-columns:1fr}}
+  .plate{border:1.5px solid var(--ink);background:#fff;padding:26px;text-align:center}
+  .plate .pt{font-family:"SF Mono",Menlo,monospace;font-size:38px;font-weight:700;letter-spacing:-1px}
+  .plate .pn{font-family:Georgia,serif;font-style:italic;font-size:15px;color:var(--ink2);margin:4px 0 12px}
+  .plate .pmeta{display:flex;justify-content:center;gap:18px;font-size:12px;color:var(--ink2)}
+  .plate .pmeta b{display:block;font-size:16px;color:var(--ink);font-family:"SF Mono",Menlo,monospace}
+  .plate.a{border-right:none}.plate.b{border-left:none}
+  @media(max-width:700px){.plate.a,.plate.b{border:1.5px solid var(--ink)}}
+  .vs{display:flex;align-items:center;justify-content:center;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);background:var(--ink);color:var(--paper);font-family:Georgia,serif;font-style:italic;font-size:22px}
+  @media(max-width:700px){.vs{padding:8px;border:1.5px solid var(--ink)}}
+  .venn-wrap{display:flex;flex-direction:column;align-items:center;padding:10px 0 4px}
+  .venn{position:relative;width:340px;height:180px;max-width:100%}
+  .venn .c{position:absolute;top:15px;width:150px;height:150px;border:1.5px solid var(--ink);border-radius:50%;mix-blend-mode:multiply}
+  .venn .ca{background:rgba(30,111,80,.22)}
+  .venn .cb{background:rgba(176,125,42,.25)}
+  .venn .vlab{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-family:"SF Mono",Menlo,monospace;font-weight:700;font-size:20px}
+  .venn .vlab small{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-family:-apple-system,sans-serif}
+  .venn .tick{position:absolute;top:0;font-family:"SF Mono",Menlo,monospace;font-size:13px;font-weight:700}
+  .bf-head{display:grid;grid-template-columns:1fr 120px 1fr;gap:10px;font-weight:700;font-size:13px;padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:10px}
+  .bf-row{display:grid;grid-template-columns:44px 1fr 120px 1fr 44px;gap:8px;align-items:center;margin-bottom:7px;font-size:12.5px}
+  .bf-lab{text-align:center;color:var(--ink2)}
+  .bf-l,.bf-r{height:15px;background:var(--paper2);border:1px solid var(--rule);position:relative}
+  .bf-l i{position:absolute;right:0;top:0;bottom:0;background:var(--green)}
+  .bf-r i{position:absolute;left:0;top:0;bottom:0;background:var(--ochre)}
+  .bf-pl{text-align:right}
+  .cmp-verdict-wrap{text-align:center;padding:6px 0 18px}
+
+  /* ---------- pulse ---------- */
+  .banner{border:1.5px solid var(--ochre);background:rgba(176,125,42,.07);padding:12px 16px;font-size:13.5px;margin-bottom:24px}
+  .pulse-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:22px}
+  @media(max-width:760px){.pulse-strip{grid-template-columns:1fr}}
+  .pstat{border:1.5px solid var(--ink);background:#fff;padding:16px 18px}
+  .pstat .pk{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);font-weight:700;margin-bottom:6px}
+  .pstat .pv{font-family:Georgia,serif;font-size:24px;font-weight:700;letter-spacing:-.4px}
+  .pstat .pd{font-size:12px;color:var(--ink2);margin-top:4px}
+  th.sortable{cursor:pointer}
+  th.sortable:hover{color:var(--ink)}
+  th.sortable:after{content:" ↕";opacity:.4}
+  th.sorted-desc:after{content:" ↓";opacity:1}
+  th.sorted-asc:after{content:" ↑";opacity:1}
+  .chatter{display:inline-block;height:9px;width:70px;background:var(--paper2);border:1px solid var(--rule);position:relative;vertical-align:middle}
+  .chatter i{position:absolute;left:0;top:0;bottom:0;background:var(--green)}
+  .up{color:var(--green);font-weight:700}.hot{color:var(--red);font-weight:700}
+  .vol-cell{padding:2px 6px;display:inline-block}
+  tr.clickrow{cursor:pointer}
+  tr.clickrow:hover td{background:var(--paper2)}
+
+  /* ---------- stock detail ---------- */
+  .stk-head{display:flex;align-items:center;gap:20px;flex-wrap:wrap;border:1.5px solid var(--ink);background:#fff;padding:24px;margin-bottom:22px}
+  .stk-tk{font-family:"SF Mono",Menlo,monospace;font-size:42px;font-weight:700;letter-spacing:-1px}
+  .stk-name{font-family:Georgia,serif;font-style:italic;font-size:17px;color:var(--ink2)}
+  .stk-price{font-family:"SF Mono",Menlo,monospace;font-size:32px;font-weight:700;margin-left:auto;text-align:right}
+  .stk-price small{display:block;font-size:14px}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1.5px solid var(--ink);background:#fff;margin-bottom:22px}
+  .stat-cell{padding:16px 18px;border-right:1px solid var(--rule)}
+  .stat-cell:last-child{border-right:none}
+  .stat-cell .sk{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);font-weight:700;margin-bottom:4px}
+  .stat-cell .sv{font-family:"SF Mono",Menlo,monospace;font-size:19px;font-weight:700}
+  .news-item{padding:14px 0;border-bottom:1px solid var(--rule)}
+  .news-item:last-child{border-bottom:none}
+  .news-item a{font-family:Georgia,serif;font-size:16.5px;font-weight:700;letter-spacing:-.2px;text-decoration:none;line-height:1.35}
+  .news-item a:hover{color:var(--green)}
+  .news-meta{font-size:12px;color:var(--ink2);margin-top:3px;letter-spacing:.03em}
+
+  /* ---------- extras: import, what-if, correlation, dashboard, potw ---------- */
+  .import-box textarea{width:100%;min-height:90px;border:1.5px solid var(--ink);padding:10px 12px;font-family:"SF Mono",Menlo,monospace;font-size:12.5px;background:#fff;outline:none;resize:vertical}
+  .import-box textarea:focus{border-color:var(--green);box-shadow:2px 2px 0 var(--green)}
+  .corr-table{border-collapse:collapse;font-family:"SF Mono",Menlo,monospace;font-size:11.5px;width:auto}
+  .corr-table td,.corr-table th{border:1px solid var(--rule);min-width:48px;height:34px;text-align:center;padding:2px 4px}
+  .corr-table th{background:var(--paper2);font-size:10.5px;letter-spacing:.04em;border-bottom:1px solid var(--rule)}
+  .whatif-result{border:1.5px solid var(--ink);background:var(--paper2);padding:16px 18px;margin-top:16px;font-size:14px;line-height:1.7}
+  .delta-up{color:var(--green);font-weight:700}.delta-dn{color:var(--red);font-weight:700}
+  .matchups{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .alert-item{display:grid;grid-template-columns:70px 104px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--rule);font-size:13.5px;align-items:baseline}
+  .alert-item:last-child{border-bottom:none}
+  .alert-item .ad{color:var(--ink2);font-size:12px;font-family:"SF Mono",Menlo,monospace}
+  .atag{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:2px 7px;border:1px solid currentColor;justify-self:start;white-space:nowrap}
+  .potw{border:2px solid var(--ink);background:#fff;padding:26px;margin-bottom:34px;box-shadow:7px 7px 0 var(--green)}
+  .potw .potw-tag{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--paper);background:var(--green);padding:3px 10px;display:inline-block;margin-bottom:10px}
+  .potw h3{font-family:Georgia,serif;font-size:26px;letter-spacing:-.5px;margin-bottom:8px}
+  .potw p{font-size:14.5px;color:var(--ink2)}
+  .submit-box{border:1.5px dashed var(--ink);padding:22px;margin-top:30px;font-size:14.5px}
+  .share-btn{background:transparent;color:var(--ink);border:1.5px solid var(--ink);padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer}
+  .share-btn:hover{background:var(--ink);color:var(--paper)}
+
+  /* ---------- leaderboards ---------- */
+  .lb-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .lb-tab{background:none;border:1.5px solid var(--ink);padding:8px 16px;font-size:13px;cursor:pointer;font-weight:600;letter-spacing:.02em}
+  .lb-tab.on{background:var(--ink);color:var(--paper)}
+  .lb-tab:hover:not(.on){background:var(--paper2)}
+  .lb-rank{font-family:Georgia,serif;font-size:19px;font-weight:700;width:38px}
+  .lb-rank.gold{color:var(--ochre)}
+  .lb-handle{font-family:"SF Mono",Menlo,monospace;font-weight:600;font-size:13px}
+  .lb-holdings{font-family:"SF Mono",Menlo,monospace;font-size:11.5px;color:var(--ink2)}
+  .lb-metric{font-family:"SF Mono",Menlo,monospace;font-weight:700;font-size:16px;white-space:nowrap}
+  .badge{display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:2px 8px;border:1px solid var(--rule);background:var(--paper2);color:var(--ink2);margin:2px 3px 0 0;white-space:nowrap}
+  .vote-btn{background:none;border:1.5px solid var(--ink);cursor:pointer;font-family:"SF Mono",Menlo,monospace;font-size:12.5px;font-weight:700;padding:5px 11px;white-space:nowrap}
+  .vote-btn:hover{background:var(--green);border-color:var(--green);color:#fff}
+  .vote-btn.voted{background:var(--green);border-color:var(--green);color:#fff;cursor:default}
+  .game-card{border:2px solid var(--ink);background:#fff;padding:26px;box-shadow:7px 7px 0 var(--ochre);margin-bottom:26px}
+  .game-holdings{font-family:"SF Mono",Menlo,monospace;font-size:14.5px;background:var(--paper2);border:1px solid var(--rule);padding:14px 16px;margin:14px 0}
+  .game-slider{width:100%;accent-color:var(--green);margin:8px 0}
+  .guess-readout{font-family:Georgia,serif;font-size:30px;font-weight:700;min-width:70px;display:inline-block}
+  .game-reveal{border-top:2px solid var(--ink);margin-top:16px;padding-top:14px;font-size:14.5px}
+
+  /* ---------- learn ---------- */
+  .article-card{border-top:1px solid var(--rule);padding:26px 0;display:grid;grid-template-columns:120px 1fr;gap:24px}
+  @media(max-width:700px){.article-card{grid-template-columns:1fr;gap:6px}}
+  .article-card:first-of-type{border-top:2px solid var(--ink)}
+  .article-date{font-size:12px;color:var(--ink2);letter-spacing:.06em;text-transform:uppercase}
+  .article-card h3{font-family:Georgia,serif;font-size:23px;letter-spacing:-.4px;margin-bottom:6px}
+  .article-card h3 a{text-decoration:none}
+  .article-card h3 a:hover{color:var(--green)}
+  .article-card p{font-size:14.5px;color:var(--ink2)}
+  .article-body{max-width:680px;font-size:16.5px;line-height:1.75}
+  .article-body p{margin-bottom:18px}
+  .article-body h3{font-family:Georgia,serif;font-size:21px;margin:28px 0 10px}
+  .article-body .figure{border:1.5px solid var(--ink);background:#fff;padding:18px;margin:22px 0;font-size:14px}
+
+  /* ---------- pricing ---------- */
+  .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:8px}
+  @media(max-width:700px){.price-grid{grid-template-columns:1fr}}
+  .price-card{border:1.5px solid var(--ink);background:#fff;padding:30px}
+  .price-card.featured{box-shadow:8px 8px 0 var(--green)}
+  .price-card .tier{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:8px}
+  .price-card .amount{font-family:Georgia,serif;font-size:46px;font-weight:700;letter-spacing:-1px}
+  .price-card .amount small{font-size:15px;color:var(--ink2);font-weight:400;letter-spacing:0}
+  .price-card ul{list-style:none;margin:20px 0 24px}
+  .price-card li{padding:8px 0;border-bottom:1px solid var(--rule);font-size:14.5px}
+  .price-card li:before{content:"— ";color:var(--green);font-weight:700}
+  .price-card li.na{color:#b0a894}
+  .price-card li.na:before{content:"— ";color:#b0a894}
+
+  footer{border-top:2px solid var(--ink);margin-top:20px;padding:32px 0 48px}
+  footer .cols{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div class="strip" id="masthead"></div>
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="#/">Over<em>lap</em><span class="ed">Early edition</span></a>
+    <nav id="nav">
+      <a href="#/" data-r="home">Home</a>
+      <div class="dd" id="ddAnalyzer">
+        <button class="dd-btn" id="ddBtn" onclick="toggleDD(event)">Analyzer <span style="font-size:10px">&#9662;</span></button>
+        <div class="dd-menu">
+          <a href="#/analyzer">Check My Portfolio</a>
+          <a href="#/compare">Compare ETFs</a>
+        </div>
+      </div>
+      <a href="#/pulse" data-r="pulse">Market Pulse</a>
+      <a href="#/boards" data-r="boards">Leaderboards</a>
+      <a href="#/dashboard" data-r="dashboard" style="color:var(--ochre);font-weight:700">Pro Desk</a>
+      <a href="#/learn" data-r="learn">Field Notes</a>
+      <a href="#/pricing" data-r="pricing">Pricing</a>
+    </nav>
+  </div>
+</div>
+
+<!-- ================= HOME ================= -->
+<section class="page" id="page-home">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="kicker">Portfolio X-ray for regular investors</div>
+        <h1 class="serif">You probably own the same stock five times.</h1>
+        <p class="lede">Apple through your brokerage. Apple inside VOO. Apple inside QQQ. Apple inside VUG. Overlap looks through your funds, adds it all up, and tells you what you actually own — in about eight seconds.</p>
+        <a class="btn" href="#/analyzer">Analyze my portfolio</a>
+        <a class="btn btn-outline" href="#/compare" style="margin-left:10px">Compare two ETFs</a>
+        <p class="footnote" style="margin-top:18px">Free. No account. Your holdings never leave your browser.</p>
+        <p class="footnote" id="homeStats" style="margin-top:8px"></p>
+      </div>
+      <div class="hero-fig">
+        <div class="fig-cap">Fig. 1 — Five holdings, one bet</div>
+        <div class="fig-row"><b class="mono">AAPL</b><div class="fig-bar"><i style="width:20%"></i></div><span class="num">20%</span></div>
+        <div class="fig-row"><b class="mono">NVDA</b><div class="fig-bar"><i style="width:18%"></i></div><span class="num">18%</span></div>
+        <div class="fig-row"><b class="mono">MSFT</b><div class="fig-bar"><i style="width:15%"></i></div><span class="num">15%</span></div>
+        <div class="fig-row"><b class="mono">QQQ</b><div class="fig-bar"><i style="width:25%"></i><em style="left:0;width:13%"></em></div><span class="num">25%</span></div>
+        <div class="fig-row"><b class="mono">XLK</b><div class="fig-bar"><i style="width:22%"></i><em style="left:0;width:22%"></em></div><span class="num">22%</span></div>
+        <div class="fig-total">
+          <span class="smallcaps">Effective technology exposure</span>
+          <span class="num" style="font-size:24px;font-weight:700;color:var(--red)">71%</span>
+        </div>
+        <div style="text-align:right;margin-top:8px"><span class="margin-note">"but it's five different positions!" — everyone</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tape"><div class="tape-inner" id="tape"></div></div>
+
+  <div class="wrap">
+    <div class="roast-strip">
+      <div>
+        <div class="rs-h">Want a public roast?</div>
+        <p>Submit your portfolio for a future <a href="#/learn">Portfolio of the Week</a>. We anonymize everything — usernames, dollar amounts, the works — and you get the full Pro treatment for free, in front of everyone.</p>
+      </div>
+      <a class="btn btn-outline" href="mailto:roast@overlap.example?subject=Roast%20my%20portfolio" style="white-space:nowrap">Submit for dissection</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div style="padding:56px 0 8px">
+      <div class="kicker">What it does</div>
+      <h2 class="section-h">Three tools. One uncomfortable truth at a time.</h2>
+    </div>
+    <hr class="rule-heavy">
+    <div class="cols3">
+      <div class="col">
+        <div class="no">No. 1</div>
+        <h3>The Analyzer</h3>
+        <p>Paste your holdings. Get a look-through sector map, your true single-stock concentration, a fee audit, and a diversification score you can argue about on Reddit.</p>
+        <p style="margin-top:10px"><a href="#/analyzer">Run it &rarr;</a></p>
+      </div>
+      <div class="col">
+        <div class="no">No. 2</div>
+        <h3>ETF Compare</h3>
+        <p>VOO or SPY? SCHD or VIG? Any two funds, head to head: holdings overlap, fees over 30 years, and whether owning both accomplishes anything.</p>
+        <p style="margin-top:10px"><a href="#/compare">Compare &rarr;</a></p>
+      </div>
+      <div class="col">
+        <div class="no">No. 3</div>
+        <h3>Market Pulse</h3>
+        <p>Where retail attention is piling up right now — unusual volume, crowd chatter, and what that concentration means for people who hold the ticker.</p>
+        <p style="margin-top:10px"><a href="#/pulse">Look &rarr;</a></p>
+      </div>
+    </div>
+    <hr class="rule-heavy" style="margin-top:0">
+
+    <div style="padding:48px 0 10px">
+      <div class="kicker">From the case files</div>
+      <h2 class="section-h">Portfolios we've straightened out</h2>
+      <p class="footnote" style="max-width:560px;margin-top:6px">Composite cases drawn from patterns we see every week. Details anonymized; dollar figures are fee savings, not market luck.</p>
+    </div>
+    <div class="case-grid" style="margin-top:18px">
+      <div class="case">
+        <div class="case-no">Case No. 12 · March 2026</div>
+        <h3>The Triple Indexer</h3>
+        <p>Held VOO, SPY, and IVV side by side — three tickers, one index, ~99% identical. Was paying SPY's 0.09% for the privilege. Consolidated the lot into SPLG at 0.02%.</p>
+        <div class="scores"><span class="lab">Score</span><span class="old">38</span><span class="arrow">&rarr;</span><span class="new">71</span></div>
+        <div class="outcome">Recovers ~$312/yr in fees on a $450k portfolio — every year, forever.</div>
+      </div>
+      <div class="case">
+        <div class="case-no">Case No. 31 · April 2026</div>
+        <h3>All-In on AI (Accidentally)</h3>
+        <p>NVDA at 28%, plus QQQ, SMH, and XLK. Look-through tech exposure: 74%. Felt diversified across "four positions." Trimmed NVDA to 12%, added VXUS and a bond sleeve.</p>
+        <div class="scores"><span class="lab">Score</span><span class="old">24</span><span class="arrow">&rarr;</span><span class="new">68</span></div>
+        <div class="outcome">Tech exposure 74% &rarr; 38%. Slept through the June chip selloff.</div>
+      </div>
+      <div class="case">
+        <div class="case-no">Case No. 55 · June 2026</div>
+        <h3>The Fee Collector</h3>
+        <p>ARKK (0.75%), GLD (0.40%), JEPI (0.35%), IWM (0.19%) — a 0.42% blended fee for what was, underneath, mostly large-cap US exposure. Swapped to cheap twins doing the same jobs.</p>
+        <div class="scores"><span class="lab">Score</span><span class="old">51</span><span class="arrow">&rarr;</span><span class="new">79</span></div>
+        <div class="outcome">Blended fee 0.42% &rarr; 0.07%. ~$3,500 kept per decade, per $100k.</div>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <div class="desk-note">
+      <div class="kicker" style="text-align:center">A note from the desk</div>
+      <p>I started Overlap after reading my two-hundredth "rate my portfolio" thread where someone holding VOO, SPY, and VTI asked whether they should add IVV. The replies were mockery. What that person needed was a picture.</p>
+      <p>Overlap is that picture. No account walls, no upsell halfway through your analysis, no pretending a pile of index funds is a strategy. Just the math I wish someone had shown me before I spent years paying 0.75% for a fund that underperformed the index it was quietly hugging.</p>
+      <p class="sig">— Matt, who builds Overlap and reads every email</p>
+    </div>
+
+    <div class="home-cta">
+      <h2>Find out what you actually own.</h2>
+      <p>Takes less time than reading one more "rate my portfolio" thread.</p>
+      <a class="btn" href="#/analyzer">Start the free analysis</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ANALYZER ================= -->
+<section class="page" id="page-analyzer">
+  <div class="wrap">
+    <div class="page-head">
+      <div class="kicker">Tool No. 1</div>
+      <h1 class="serif">The Analyzer</h1>
+      <p>Enter tickers and amounts — dollars or percentages, either works. We look inside your ETFs, so 20% VOO counts as 1.2% Apple, 1.3% Microsoft, and so on.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Your holdings</h2>
+      <div class="sub">Nothing is uploaded or stored. The math runs in your browser.</div>
+      <div class="chips">
+        <span class="smallcaps">Try a sample:</span>
+        <button class="chip" onclick="loadPreset('reddit')">Typical Reddit portfolio</button>
+        <button class="chip" onclick="loadPreset('triple')">The "triple S&amp;P" special</button>
+        <button class="chip" onclick="loadPreset('balanced')">Actually balanced</button>
+      </div>
+      <details class="apibox" style="margin:0 0 16px">
+        <summary>Import from your broker — paste a CSV or positions list</summary>
+        <div class="import-box" style="margin-top:8px">
+          <textarea id="importText" placeholder="Paste from Robinhood, Fidelity, Schwab exports — one holding per line, e.g.&#10;VOO, 12000&#10;AAPL  4500&#10;SCHD	2000"></textarea>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+            <button class="chip" onclick="parseImport()">Parse &amp; fill</button>
+            <span class="footnote" id="importStatus">Screenshot import is coming — for now, paste text.</span>
+          </div>
+        </div>
+      </details>
+      <div class="ledger">
+        <div class="ledger-head"><span>Ticker</span><span>Amount ($ or %)</span><span>Identified as</span><span></span></div>
+        <div id="rows"></div>
+        <button class="addrow" onclick="addRow()">+ Add another holding</button>
+      </div>
+      <details class="apibox">
+        <summary>Live data settings (optional)</summary>
+        <input id="apiKey" type="text" placeholder="Finnhub API key — used to look up tickers we don't know">
+        <div class="footnote" style="margin-top:6px">Without a key, we cover 60+ of the most commonly held stocks and funds. A pasted key is remembered on this device only.</div>
+      </details>
+      <div style="margin-top:16px"><button class="btn" onclick="analyze()">Run the analysis</button></div>
+    </div>
+
+    <div id="results" class="hidden">
+      <div class="report-head">
+        <span class="rh-title">The Report</span>
+        <span class="rh-meta" id="reportMeta"></span>
+        <span style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="chip" id="roastChip" onclick="toggleRoast()">Roast mode: off</button>
+          <button class="share-btn" onclick="downloadCard()">&#8681; Download report card (share it)</button>
+        </span>
+      </div>
+      <div class="panel" style="margin-top:0">
+        <div class="score-flex">
+          <div class="gauge">
+            <svg viewBox="0 0 210 120">
+              <path d="M20,105 A85,85 0 0 1 190,105" fill="none" stroke="#efe9de" stroke-width="14" stroke-linecap="butt"/>
+              <path id="gaugeArc" d="M20,105 A85,85 0 0 1 190,105" fill="none" stroke="#1e6f50" stroke-width="14" stroke-linecap="butt" stroke-dasharray="0 999"/>
+              <g font-family="SF Mono,Menlo,monospace" font-size="9" fill="#4a443a">
+                <text x="14" y="118">0</text><text x="98" y="14">50</text><text x="184" y="118">100</text>
+              </g>
+            </svg>
+            <div class="gnum" id="gaugeNum">–<small>/100</small></div>
+          </div>
+          <div style="text-align:center">
+            <div class="smallcaps" style="margin-bottom:10px">Diversification grade</div>
+            <div class="stamp" id="gradeStamp" style="font-size:40px">–</div>
+          </div>
+        </div>
+        <div class="verdict" id="scoreVerdict"></div>
+        <div id="scoreBreakdown" style="max-width:520px;margin:18px auto 0"></div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <h2><span class="pno">§1</span>Findings</h2>
+          <div class="sub">The things a fee-only advisor would circle in red pen.</div>
+          <div id="flags"></div>
+        </div>
+        <div class="panel">
+          <h2><span class="pno">§2</span>Largest true positions</h2>
+          <div class="sub">Direct shares + slices inside every ETF you hold.</div>
+          <div id="sectorBars"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <h2><span class="pno">§3</span>Sector exposure</h2>
+          <div class="sub">True look-through — including what's inside your funds.</div>
+          <div class="chart-wrap"><canvas id="sectorChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h2><span class="pno">§4</span>Fee audit</h2>
+          <div>
+            <div class="smallcaps">Weighted expense ratio</div>
+            <div class="fee-big" id="feeNum">–</div>
+            <div class="footnote" id="feeNote" style="margin-bottom:14px"></div>
+            <div id="feeTable"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" id="overlapCard">
+        <h2><span class="pno">§5</span>Fund overlap</h2>
+        <div class="sub">How much of each pair is literally the same stocks, by weight.</div>
+        <div id="overlaps"></div>
+      </div>
+      <div class="panel">
+        <h2><span class="pno">§6</span>The full rebalancing plan <span class="pro-tag">Pro — free during the early edition</span></h2>
+        <div class="sub">Quick notes first; the exact trades below.</div>
+        <div id="freeSuggestions"></div>
+        <hr class="rule" style="margin:20px 0">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <span class="smallcaps">Risk profile:</span>
+          <button class="chip plan-prof on" data-p="aggressive" onclick="setProfile('aggressive')">Aggressive</button>
+          <button class="chip plan-prof" data-p="balanced" onclick="setProfile('balanced')">Balanced</button>
+          <button class="chip plan-prof" data-p="conservative" onclick="setProfile('conservative')">Conservative</button>
+          <label style="font-size:13px;color:var(--ink2);margin-left:8px"><input type="checkbox" id="taxable" style="vertical-align:middle"> This is a taxable account</label>
+        </div>
+        <button class="btn" onclick="generatePlan()">Generate my plan</button>
+        <div id="planOut" class="hidden" style="margin-top:20px"></div>
+      </div>
+      <div class="panel">
+        <h2><span class="pno">§7</span>The what-if machine</h2>
+        <div class="sub">Thinking of buying something? See what it does to your score before you spend a dollar.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input id="wiTicker" class="ticker-in" style="width:130px" placeholder="e.g. VXUS">
+          <input id="wiAmt" type="number" min="0" style="width:150px" placeholder="$ or %">
+          <button class="btn" style="padding:11px 20px" onclick="whatIf()">Test the trade</button>
+        </div>
+        <div id="wiResult" class="hidden whatif-result"></div>
+      </div>
+      <div class="panel">
+        <h2><span class="pno">§8</span>Correlation check</h2>
+        <div class="sub">Overlap catches identical holdings. Correlation catches holdings that merely <i>move</i> identically — TSLA and ARKK aren't the same asset, but they have the same bad days. Long-run estimates.</div>
+        <div style="overflow-x:auto"><table class="corr-table" id="corrTable"></table></div>
+        <div class="footnote" style="margin-top:12px" id="corrNote"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMPARE ================= -->
+<section class="page" id="page-compare">
+  <div class="wrap">
+    <div class="page-head">
+      <div class="kicker">Tool No. 2</div>
+      <h1 class="serif">Compare ETFs</h1>
+      <p>Two funds enter. One question gets answered: does owning both actually diversify you, or are you paying two fees for one portfolio?</p>
+    </div>
+    <div class="panel">
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <select id="cmpA"></select>
+        <span class="serif" style="font-style:italic;font-size:18px">vs.</span>
+        <select id="cmpB"></select>
+        <button class="btn" onclick="runCompare()">Compare</button>
+      </div>
+      <div class="footnote" style="margin-top:16px">Or jump to a matchup people ask about constantly:</div>
+      <div class="matchups" id="matchups"></div>
+    </div>
+    <div id="cmpResults" class="hidden">
+      <div class="duel">
+        <div class="plate a" id="plateA"></div>
+        <div class="vs">vs.</div>
+        <div class="plate b" id="plateB"></div>
+      </div>
+      <div class="panel">
+        <h2>Shared holdings</h2>
+        <div class="sub">The shaded intersection is money invested in the same stocks, at the same weights, twice.</div>
+        <div class="venn-wrap">
+          <div class="venn" id="venn"></div>
+        </div>
+        <div class="cmp-verdict-wrap">
+          <div class="stamp" id="cmpStamp" style="font-size:22px;margin-bottom:12px">–</div>
+          <div id="cmpVerdict" style="font-family:Georgia,serif;font-style:italic;font-size:17px;max-width:560px;margin:0 auto"></div>
+        </div>
+        <div class="footnote" style="text-align:center" id="cmpFee30"></div>
+      </div>
+      <div class="panel">
+        <h2>Sector tilt, side by side</h2>
+        <div class="sub">Bars reach toward the fund that holds more of the sector. Mirror images = redundant funds.</div>
+        <div id="cmpBars"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PULSE ================= -->
+<section class="page" id="page-pulse">
+  <div class="wrap">
+    <div class="page-head">
+      <div class="kicker">Tool No. 3</div>
+      <h1 class="serif">Market Pulse</h1>
+      <p>Where retail attention is concentrating this week — unusual trading volume and crowd chatter. Attention is not a buy signal. Usually it's the opposite.</p>
+    </div>
+    <div class="banner"><b>Preview with simulated data.</b> The production version pulls live volume from exchange feeds and mention counts from public forums, refreshed every 15 minutes.</div>
+
+    <div class="pulse-strip">
+      <div class="pstat">
+        <div class="pk">Most crowded this week</div>
+        <div class="pv mono">PLTR</div>
+        <div class="pd">Chatter 92/100 with 3.1× volume. Retail-heavy names amplify both directions.</div>
+      </div>
+      <div class="pstat">
+        <div class="pk">Quiet accumulation</div>
+        <div class="pv mono">OXY</div>
+        <div class="pd">2.3× volume, chatter only 34. Volume without chatter is often the more interesting signal.</div>
+      </div>
+      <div class="pstat">
+        <div class="pk">Most duplicated holding</div>
+        <div class="pv mono">NVDA</div>
+        <div class="pd">Appears in VOO, QQQ, XLK, VUG &amp; SMH — the stock people own five times without noticing.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Unusual volume &amp; chatter</h2>
+      <div class="sub">Week of June 29, 2026 (sample) · click a column header to sort · click any row for the full stock page · tickers get flagged if your analyzed portfolio holds them</div>
+      <table>
+        <thead><tr>
+          <th>Ticker</th><th>Company</th>
+          <th class="sortable" data-k="vol">Volume vs 30-day</th>
+          <th>Trend (8 wk)</th>
+          <th class="sortable" data-k="chat">Chatter</th>
+          <th>Worth knowing</th>
+        </tr></thead>
+        <tbody id="pulseRows"></tbody>
+      </table>
+      <div class="footnote" style="margin-top:14px">Chatter index blends public forum mention velocity with comment sentiment. High chatter + high volume historically precedes elevated volatility, not returns.</div>
+    </div>
+    <div class="panel">
+      <h2>What this page is for</h2>
+      <p style="font-size:14.5px;max-width:680px;color:var(--ink2)">If a ticker on this list is also one of your top holdings, your portfolio is riding a crowded trade. That can work — until everyone heads for the same exit. Cross-reference with <a href="#/analyzer">the Analyzer</a> to see how exposed you are. <span class="pro-tag">Pro</span> subscribers get alerts when their holdings show up here, plus insider-transaction flags.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STOCK DETAIL ================= -->
+<section class="page" id="page-stock">
+  <div class="wrap">
+    <div style="padding:32px 0 18px"><a href="#/pulse" style="font-weight:600;font-size:13.5px">&larr; Back to Market Pulse</a></div>
+    <div class="stk-head" id="stkHead"></div>
+    <div class="stat-grid" id="stkStats"></div>
+    <div class="grid2">
+      <div class="panel">
+        <h2>The crowd read</h2>
+        <div class="sub">Volume, chatter, and what the combination usually means.</div>
+        <div id="stkCrowd"></div>
+      </div>
+      <div class="panel">
+        <h2>Your exposure</h2>
+        <div class="sub">Direct shares plus what's hiding inside your funds.</div>
+        <div id="stkExposure"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Recent news <span class="sub" style="display:inline">— live via Finnhub</span></h2>
+      <div id="stkNews"><div class="footnote">Loading news…</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEADERBOARDS ================= -->
+<section class="page" id="page-boards">
+  <div class="wrap">
+    <div class="page-head">
+      <div class="kicker">The Standings</div>
+      <h1 class="serif">Leaderboards</h1>
+      <p>Anonymized portfolios from the community, ranked. Vote for the ones that deserve the spotlight — and learn from the ones that deserve the Hall of Shame.</p>
+    </div>
+    <div class="banner"><b>Simulated preview.</b> In production, rankings rebuild nightly from opted-in community portfolios, and long-haul returns are verified through broker sync — no screenshots, no lying.</div>
+    <div class="banner" id="yourRank" style="border-color:var(--green);background:rgba(30,111,80,.06)"></div>
+
+    <div class="game-card">
+      <div class="kicker" style="color:var(--ochre)">Parlor game</div>
+      <h2 class="serif" style="font-size:24px;letter-spacing:-.4px;margin-bottom:4px">Guess the Score</h2>
+      <p class="footnote">A real portfolio shape from our case files. How diversified do <i>you</i> think it is?</p>
+      <div class="game-holdings" id="gameHoldings"></div>
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+        <input type="range" min="0" max="100" value="50" class="game-slider" id="gameSlider" style="flex:1;min-width:200px" oninput="document.getElementById('gameGuess').textContent=this.value">
+        <span>Your guess: <span class="guess-readout" id="gameGuess">50</span></span>
+        <button class="btn" onclick="revealScore()">Lock it in</button>
+      </div>
+      <div class="game-reveal hidden" id="gameReveal"></div>
+    </div>
+
+    <div class="lb-tabs" id="lbTabs"></div>
+    <div class="panel">
+      <h2 id="lbTitle"></h2>
+      <div class="sub" id="lbSub"></div>
+      <table>
+        <thead><tr><th></th><th>Investor</th><th>Portfolio</th><th id="lbMetricHead"></th><th>Badges</th><th>Respect</th></tr></thead>
+        <tbody id="lbRows"></tbody>
+      </table>
+      <div class="footnote" style="margin-top:14px" id="lbFoot"></div>
+    </div>
+
+    <div class="panel" style="text-align:center;padding:32px">
+      <div class="serif" style="font-size:22px;font-weight:700;letter-spacing:-.4px;margin-bottom:6px">Think you belong up there?</div>
+      <p class="footnote" style="margin-bottom:16px">Run your analysis, opt in to the standings, and defend your allocation in public.</p>
+      <a class="btn" href="#/analyzer">Get scored</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DASHBOARD (PRO PREVIEW) ================= -->
+<section class="page" id="page-dashboard">
+  <div class="wrap">
+    <div class="page-head">
+      <div class="kicker">Pro <span style="color:var(--ink2)">· preview</span></div>
+      <h1 class="serif">My Desk</h1>
+      <p>Where Pro subscribers keep an eye on a saved portfolio without staring at it. Below is a live-looking preview using a sample portfolio (the "Reddit special," post-rebalance).</p>
+    </div>
+    <div class="banner"><b>Simulated preview.</b> In production this page tracks <i>your</i> saved portfolio: alerts fire when drift, crowding, or insider activity touches something you own.</div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>Score history <span class="pro-tag">Pro</span></h2>
+        <div class="sub">Diversification score since starting rebalancing in January.</div>
+        <canvas id="histChart" height="190"></canvas>
+        <div class="footnote" style="margin-top:10px">41 &rarr; 68 in six months. Most of the jump: consolidating three S&amp;P funds and adding VXUS.</div>
+      </div>
+      <div class="panel">
+        <h2>Drift &amp; crowding alerts <span class="pro-tag">Pro</span></h2>
+        <div class="sub">We watch so you don't have to. Delivered by email, at most one per day.</div>
+        <div class="alert-item"><span class="ad">Jun 28</span><span class="atag" style="color:var(--red)">Drift</span><span>NVDA +9% this week — your effective tech exposure crossed <b>45%</b> (your target band tops out at 38%).</span></div>
+        <div class="alert-item"><span class="ad">Jun 21</span><span class="atag" style="color:var(--ochre)">Crowding</span><span>SMCI entered Market Pulse's top three while sitting at 6% of your portfolio. Crowded trades cut both ways.</span></div>
+        <div class="alert-item"><span class="ad">Jun 14</span><span class="atag" style="color:var(--ochre)">Fees</span><span>Your weighted expense ratio rose to 0.14% after the QQQ buy. QQQM does the identical job for 0.15% vs 0.18%.</span></div>
+        <div class="alert-item"><span class="ad">Jun 02</span><span class="atag" style="color:var(--green)">Rebalance</span><span>Quarterly check: trim 4% QQQ, add VXUS, and you're back inside every band.</span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>Insider activity on your holdings <span class="pro-tag">Pro</span></h2>
+        <div class="sub">Form 4 filings, filtered to stocks you actually own — with a read on whether it matters.</div>
+        <table>
+          <thead><tr><th>Ticker</th><th>Activity (30d)</th><th>Value</th><th>Our read</th></tr></thead>
+          <tbody>
+            <tr><td><b class="mono">NVDA</b></td><td>3 sells</td><td class="num">$48M</td><td style="font-size:13px;color:var(--ink2)">Scheduled 10b5-1 sales. Routine; low signal.</td></tr>
+            <tr><td><b class="mono">SMCI</b></td><td>CFO sell</td><td class="num">$2.1M</td><td style="font-size:13px;color:var(--ink2)"><span class="hot">Unscheduled</span> — first open-market sale in 14 months. Worth a look.</td></tr>
+            <tr><td><b class="mono">SOFI</b></td><td>CEO buy</td><td class="num">$500K</td><td style="font-size:13px;color:var(--ink2)"><span class="up">Open-market buy</span> on weakness. Insiders buying their own dip.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Dividend &amp; tax lens <span class="pro-tag">Pro</span></h2>
+        <div class="sub">What each holding pays, when, and which account it should live in.</div>
+        <table>
+          <thead><tr><th>Holding</th><th>Yield</th><th>Next ex-div</th><th>Belongs in</th></tr></thead>
+          <tbody>
+            <tr><td><b class="mono">SCHD</b></td><td class="num">3.4%</td><td class="num">Sep 25</td><td style="font-size:13px">Either — dividends are qualified</td></tr>
+            <tr><td><b class="mono">BND</b></td><td class="num">4.1%</td><td class="num">Aug 01</td><td style="font-size:13px"><b>IRA/401k</b> — interest is taxed as income</td></tr>
+            <tr><td><b class="mono">VXUS</b></td><td class="num">2.9%</td><td class="num">Sep 18</td><td style="font-size:13px"><b>Taxable</b> — you lose the foreign tax credit in an IRA</td></tr>
+            <tr><td><b class="mono">VOO</b></td><td class="num">1.3%</td><td class="num">Sep 27</td><td style="font-size:13px">Either</td></tr>
+          </tbody>
+        </table>
+        <div class="footnote" style="margin-top:10px">Asset location is the rare free lunch nobody eats: same investments, arranged tax-efficiently.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Stress test <span class="pro-tag">Pro</span></h2>
+      <div class="sub" id="stressSub">How would this portfolio have ridden through history's worst stretches? Pick a crisis.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="chip stress-chip on" data-s="gfc" onclick="runStress('gfc')">2008 — Financial crisis</button>
+        <button class="chip stress-chip" data-s="covid" onclick="runStress('covid')">2020 — COVID crash</button>
+        <button class="chip stress-chip" data-s="rates" onclick="runStress('rates')">2022 — Rate shock</button>
+      </div>
+      <canvas id="stressChart" height="170"></canvas>
+      <div id="stressOut" class="whatif-result" style="margin-top:16px"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>New-money allocator <span class="pro-tag">Pro</span></h2>
+        <div class="sub">This month's contribution, pointed at whatever is furthest below target — rebalancing without selling anything.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input id="nmAmt" type="number" min="0" placeholder="e.g. 500" style="width:150px">
+          <button class="btn" style="padding:11px 20px" onclick="allocateNewMoney()">Where does it go?</button>
+        </div>
+        <div id="nmOut" class="hidden" style="margin-top:16px"></div>
+      </div>
+      <div class="panel">
+        <h2>Advisor second opinion <span class="pro-tag">Pro</span></h2>
+        <div class="sub">Paste the portfolio an advisor proposed. We'll audit the fees and overlap before you sign anything.</div>
+        <div class="import-box">
+          <textarea id="advText" placeholder="One holding per line, e.g.&#10;JEPI, 25&#10;ARKK, 15&#10;SPY, 40&#10;GLD, 20"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px">
+          <button class="btn" style="padding:11px 20px" onclick="auditAdvisor()">Audit the proposal</button>
+          <button class="chip" onclick="document.getElementById('advText').value='JEPI, 25\nARKK, 15\nSPY, 40\nGLD, 20';auditAdvisor()">Try a spicy example</button>
+        </div>
+        <div id="advOut" class="hidden" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Tax-loss harvesting scanner <span class="pro-tag">Pro</span></h2>
+      <div class="sub">Positions sitting below cost basis, with like-but-not-identical swaps that keep your exposure and bank the loss. Sample data.</div>
+      <table>
+        <thead><tr><th>Lot</th><th>Cost basis</th><th>Value now</th><th>Harvestable loss</th><th>Swap into</th><th>Watch out</th></tr></thead>
+        <tbody>
+          <tr><td><b class="mono">VXUS</b> (Mar '26 lot)</td><td class="num">$14,200</td><td class="num">$12,850</td><td class="num" style="color:var(--red)">−$1,350</td><td><b class="mono">IXUS</b> — different index, same job</td><td style="font-size:13px;color:var(--ink2)">Clear — no purchases in 30 days</td></tr>
+          <tr><td><b class="mono">VNQ</b> (Jan '26 lot)</td><td class="num">$6,000</td><td class="num">$5,320</td><td class="num" style="color:var(--red)">−$680</td><td><b class="mono">SCHH</b> — REIT twin, 0.07%</td><td style="font-size:13px;color:var(--ink2)">Clear</td></tr>
+          <tr><td><b class="mono">SMCI</b> (May '26 lot)</td><td class="num">$3,100</td><td class="num">$2,240</td><td class="num" style="color:var(--red)">−$860</td><td><b class="mono">SMH</b> — keeps semi exposure</td><td style="font-size:13px;color:var(--ink2)"><span class="hot">Wash-sale risk</span> — you bought SMCI 12 days ago</td></tr>
+        </tbody>
+      </table>
+      <div class="footnote" style="margin-top:12px">Harvesting ~$2,030 offsets gains (or up to $3,000 of income) this tax year — roughly <b>$450</b> back at a 22% bracket, for portfolio exposure you kept anyway. Wash-sale rule: don't rebuy the identical security within 30 days, either direction.</div>
+    </div>
+
+    <div class="panel" style="text-align:center;padding:36px">
+      <div class="serif" style="font-size:24px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px">This desk could be watching your portfolio.</div>
+      <p class="footnote" style="margin-bottom:18px">Save a portfolio once; we handle the vigilance. $8/month.</p>
+      <a class="btn" href="#/pricing">See pricing</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEARN ================= -->
+<section class="page" id="page-learn">
+  <div class="wrap">
+    <div class="page-head">
+      <div class="kicker">Field Notes</div>
+      <h1 class="serif">Short essays on owning things twice</h1>
+      <p>What we've learned from analyzing portfolios that all look suspiciously alike.</p>
+    </div>
+    <div id="articleList">
+      <div class="potw">
+        <span class="potw-tag">Portfolio of the Week</span>
+        <h3>u/quietcompounder was 61% tech and had no idea</h3>
+        <p>Twelve holdings, four brokerages, a spreadsheet with color-coding — and underneath it all, one enormous bet on semiconductors. This week's public dissection: what the look-through showed, the three trades that fixed it, and the $61,000 fee difference over 25 years.</p>
+        <p style="margin-top:12px"><a href="#" data-article="a4" class="btn btn-outline" style="padding:9px 18px;font-size:13.5px">Read the dissection &rarr;</a></p>
+      </div>
+      <div class="article-card">
+        <div class="article-date">June 24, 2026</div>
+        <div>
+          <h3><a href="#" data-article="a1">VOO, SPY, and IVV walk into a portfolio. They are the same fund.</a></h3>
+          <p>Three tickers, three fund companies, one index. The only real difference is the fee — and one of them charges triple. A short field guide to the most common redundancy in retail portfolios.</p>
+          <p style="margin-top:8px"><a href="#" data-article="a1" style="font-weight:600;color:var(--green)">Read &rarr;</a></p>
+        </div>
+      </div>
+      <div class="article-card">
+        <div class="article-date">June 17, 2026</div>
+        <div>
+          <h3><a href="#" data-article="a2">Your "diversified" tech portfolio is one trade</a></h3>
+          <p>AAPL, NVDA, MSFT, QQQ, and XLK feel like five decisions. They're one decision, made five times, with correlations north of 0.85. What look-through concentration actually means for drawdowns.</p>
+          <p style="margin-top:8px"><a href="#" data-article="a2" style="font-weight:600;color:var(--green)">Read &rarr;</a></p>
+        </div>
+      </div>
+      <div class="article-card">
+        <div class="article-date">June 10, 2026</div>
+        <div>
+          <h3><a href="#" data-article="a3">The 0.06% difference that costs $18,000</a></h3>
+          <p>Expense ratios look like rounding errors. Compounded over thirty years of contributions, they're a car. How to audit what your funds charge and swap the expensive ones without triggering taxes.</p>
+          <p style="margin-top:8px"><a href="#" data-article="a3" style="font-weight:600;color:var(--green)">Read &rarr;</a></p>
+        </div>
+      </div>
+      <div class="submit-box">
+        <b class="serif" style="font-size:17px">Want a public roast?</b><br>
+        Submit your portfolio for a future Portfolio of the Week. We anonymize everything — usernames, dollar amounts, the works — and you get the full Pro treatment for free, in front of everyone.
+        <div style="margin-top:12px"><a class="btn btn-outline" href="mailto:roast@overlap.example?subject=Roast%20my%20portfolio" style="padding:9px 18px;font-size:13.5px">Submit for dissection</a></div>
+      </div>
+    </div>
+    <div id="articleView" class="hidden">
+      <p style="margin-bottom:20px"><a href="#" id="backToList" style="font-weight:600">&larr; All field notes</a></p>
+      <div class="article-body" id="articleBody"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section class="page" id="page-pricing">
+  <div class="wrap">
+    <div class="page-head">
+      <div class="kicker">Pricing</div>
+      <h1 class="serif">Free to see the problem.<br>Paid to fix it.</h1>
+      <p>The diagnosis is always free. Pro is for people who want the treatment plan.</p>
+    </div>
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="tier">Free</div>
+        <div class="amount">$0</div>
+        <ul>
+          <li>Full portfolio analysis, unlimited runs</li>
+          <li>Look-through sector &amp; single-stock concentration</li>
+          <li>Fund overlap detection</li>
+          <li>Fee audit with cheaper alternatives</li>
+          <li>ETF head-to-head comparisons</li>
+          <li class="na">Rebalancing plan with exact trades</li>
+          <li class="na">Alerts when your holdings go crowded</li>
+        </ul>
+        <a class="btn btn-outline" href="#/analyzer">Start analyzing</a>
+      </div>
+      <div class="price-card featured">
+        <div class="tier">Pro</div>
+        <div class="amount">$8<small>/month, or $72/year</small></div>
+        <ul>
+          <li>Everything in Free</li>
+          <li>Full rebalancing notes: target weights &amp; exact trades</li>
+          <li>Tax-aware sell ordering</li>
+          <li>Market Pulse alerts on your holdings</li>
+          <li>Insider-transaction flags</li>
+          <li>Quarterly portfolio report, emailed</li>
+        </ul>
+        <a class="btn" href="#" onclick="alert('Checkout goes here.');return false">Start Pro — first report free</a>
+      </div>
+    </div>
+    <hr class="rule">
+    <div style="max-width:680px">
+      <h2 class="section-h" style="font-size:22px">Honest answers</h2>
+      <p style="font-size:14.5px;color:var(--ink2);margin:12px 0"><b style="color:var(--ink)">Is this financial advice?</b> No. Overlap is an analytics tool — it shows you what you own and what it costs. What you do about it is between you, your circumstances, and possibly a fiduciary advisor.</p>
+      <p style="font-size:14.5px;color:var(--ink2);margin:12px 0"><b style="color:var(--ink)">Do you sell my data?</b> There is no data to sell. Free-tier analysis runs entirely in your browser; we never see your holdings.</p>
+      <p style="font-size:14.5px;color:var(--ink2);margin:12px 0"><b style="color:var(--ink)">Why so cheap?</b> Because the math isn't expensive, and neither is honesty. We'd rather have 10,000 subscribers who trust us than 100 paying hedge-fund prices.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <div class="wordmark" style="font-size:20px">Over<em>lap</em></div>
+        <p class="footnote" style="max-width:340px;margin-top:8px">Educational analytics, not investment advice. Fund data is approximate sample data in this preview; the production build uses live sources. Past performance guarantees nothing, as you know.</p>
+      </div>
+      <div>
+        <div class="smallcaps" style="margin-bottom:8px">Tools</div>
+        <p class="footnote"><a href="#/analyzer">Analyzer</a><br><a href="#/compare">Compare ETFs</a><br><a href="#/pulse">Market Pulse</a></p>
+      </div>
+      <div>
+        <div class="smallcaps" style="margin-bottom:8px">Company</div>
+        <p class="footnote"><a href="#/learn">Field Notes</a><br><a href="#/pricing">Pricing</a><br><a href="mailto:hello@overlap.example">Contact</a></p>
+      </div>
+    </div>
+    <p class="footnote" style="margin-top:28px;padding-top:14px;border-top:1px solid var(--rule)">&copy; 2026 Overlap. Set in Georgia, on purpose. P.S. — if you found a bug, that's a free month of Pro. Email us.</p>
+  </div>
+</footer>
+
+<script>
+/* ============ DATA (approximate sample data, mid-2026) ============ */
+const SECTORS = ["Technology","Financials","Healthcare","Consumer Disc.","Comm. Services","Industrials","Consumer Staples","Energy","Utilities","Real Estate","Materials","Bonds","International","Gold/Commodity"];
+const SECTOR_COLORS = ["#1e6f50","#b07d2a","#b3382c","#31567e","#6a4a7c","#7d7461","#3d7a6b","#8a5a2c","#4a6b52","#9c6b5a","#8b8577","#5b6770","#2c5d43","#c2a24a"];
+
+const STOCKS = {
+  AAPL:{n:"Apple",s:"Technology"},MSFT:{n:"Microsoft",s:"Technology"},NVDA:{n:"NVIDIA",s:"Technology"},
+  AVGO:{n:"Broadcom",s:"Technology"},AMD:{n:"AMD",s:"Technology"},CRM:{n:"Salesforce",s:"Technology"},
+  ORCL:{n:"Oracle",s:"Technology"},PLTR:{n:"Palantir",s:"Technology"},SMCI:{n:"Supermicro",s:"Technology"},
+  INTC:{n:"Intel",s:"Technology"},MU:{n:"Micron",s:"Technology"},TSM:{n:"TSMC",s:"Technology"},
+  AMZN:{n:"Amazon",s:"Consumer Disc."},TSLA:{n:"Tesla",s:"Consumer Disc."},HD:{n:"Home Depot",s:"Consumer Disc."},
+  MCD:{n:"McDonald's",s:"Consumer Disc."},NKE:{n:"Nike",s:"Consumer Disc."},SBUX:{n:"Starbucks",s:"Consumer Disc."},
+  GOOGL:{n:"Alphabet",s:"Comm. Services"},GOOG:{n:"Alphabet",s:"Comm. Services"},META:{n:"Meta",s:"Comm. Services"},
+  NFLX:{n:"Netflix",s:"Comm. Services"},DIS:{n:"Disney",s:"Comm. Services"},
+  JPM:{n:"JPMorgan",s:"Financials"},BAC:{n:"Bank of America",s:"Financials"},V:{n:"Visa",s:"Financials"},
+  MA:{n:"Mastercard",s:"Financials"},"BRK.B":{n:"Berkshire",s:"Financials"},BRKB:{n:"Berkshire",s:"Financials"},
+  GS:{n:"Goldman Sachs",s:"Financials"},SCHW:{n:"Schwab",s:"Financials"},COIN:{n:"Coinbase",s:"Financials"},
+  HOOD:{n:"Robinhood",s:"Financials"},SOFI:{n:"SoFi",s:"Financials"},
+  UNH:{n:"UnitedHealth",s:"Healthcare"},JNJ:{n:"J&J",s:"Healthcare"},LLY:{n:"Eli Lilly",s:"Healthcare"},
+  PFE:{n:"Pfizer",s:"Healthcare"},ABBV:{n:"AbbVie",s:"Healthcare"},MRK:{n:"Merck",s:"Healthcare"},
+  XOM:{n:"Exxon",s:"Energy"},CVX:{n:"Chevron",s:"Energy"},OXY:{n:"Occidental",s:"Energy"},
+  PG:{n:"P&G",s:"Consumer Staples"},KO:{n:"Coca-Cola",s:"Consumer Staples"},PEP:{n:"PepsiCo",s:"Consumer Staples"},
+  COST:{n:"Costco",s:"Consumer Staples"},WMT:{n:"Walmart",s:"Consumer Staples"},
+  BA:{n:"Boeing",s:"Industrials"},CAT:{n:"Caterpillar",s:"Industrials"},GE:{n:"GE Aerospace",s:"Industrials"},
+  RTX:{n:"RTX",s:"Industrials"},UPS:{n:"UPS",s:"Industrials"},
+  NEE:{n:"NextEra",s:"Utilities"},O:{n:"Realty Income",s:"Real Estate"},LIN:{n:"Linde",s:"Materials"},
+  T:{n:"AT&T",s:"Comm. Services"},VZ:{n:"Verizon",s:"Comm. Services"}
+};
+
+const SP500_SW = {"Technology":33,"Financials":13,"Healthcare":10.5,"Consumer Disc.":10.5,"Comm. Services":9.5,"Industrials":8,"Consumer Staples":5.5,"Energy":3.5,"Utilities":2.5,"Real Estate":2,"Materials":1.5};
+const SP500_H = {NVDA:7.0,MSFT:6.5,AAPL:6.2,AMZN:3.9,META:2.8,AVGO:2.4,GOOGL:2.3,GOOG:1.9,TSLA:1.8,"BRK.B":1.6};
+const NDX_SW = {"Technology":52,"Comm. Services":15,"Consumer Disc.":13,"Healthcare":6,"Consumer Staples":6,"Industrials":5,"Utilities":1.5,"Financials":0.5,"Energy":0.5,"Materials":0.5};
+const NDX_H = {NVDA:9.0,MSFT:8.2,AAPL:7.8,AMZN:5.4,AVGO:5.2,META:5.0,TSLA:3.0,GOOGL:2.6,GOOG:2.5,COST:2.5};
+const ETFS = {
+  VOO:{n:"Vanguard S&P 500",er:0.03,cls:"US Large Cap",sw:SP500_SW,h:SP500_H},
+  SPY:{n:"SPDR S&P 500",er:0.09,cls:"US Large Cap",sw:SP500_SW,h:SP500_H},
+  IVV:{n:"iShares Core S&P 500",er:0.03,cls:"US Large Cap",sw:SP500_SW,h:SP500_H},
+  SPLG:{n:"SPDR Portfolio S&P 500",er:0.02,cls:"US Large Cap",sw:SP500_SW,h:SP500_H},
+  VTI:{n:"Vanguard Total Stock Mkt",er:0.03,cls:"US Total Market",sw:{"Technology":31,"Financials":13.5,"Healthcare":11,"Consumer Disc.":10.5,"Comm. Services":9,"Industrials":9,"Consumer Staples":5,"Energy":3.5,"Utilities":2.5,"Real Estate":2.5,"Materials":2.5},h:{NVDA:6.0,MSFT:5.6,AAPL:5.3,AMZN:3.3,META:2.4,AVGO:2.0,GOOGL:2.0,GOOG:1.6,TSLA:1.5,"BRK.B":1.4}},
+  QQQ:{n:"Invesco QQQ (Nasdaq-100)",er:0.18,cls:"US Large Growth",sw:NDX_SW,h:NDX_H},
+  QQQM:{n:"Invesco Nasdaq-100 (QQQM)",er:0.15,cls:"US Large Growth",sw:NDX_SW,h:NDX_H},
+  VUG:{n:"Vanguard Growth",er:0.04,cls:"US Large Growth",sw:{"Technology":48,"Consumer Disc.":14,"Comm. Services":13,"Industrials":8,"Healthcare":7,"Financials":5,"Consumer Staples":2,"Energy":1,"Real Estate":1,"Materials":1},h:{NVDA:11.0,MSFT:10.4,AAPL:9.9,AMZN:6.2,META:4.5,AVGO:3.8,GOOGL:3.6,GOOG:3.0,TSLA:2.9,LLY:2.4}},
+  VTV:{n:"Vanguard Value",er:0.04,cls:"US Large Value",sw:{"Financials":23,"Healthcare":15,"Industrials":13,"Consumer Staples":10,"Energy":8,"Technology":8,"Utilities":7,"Comm. Services":5,"Consumer Disc.":5,"Real Estate":3,"Materials":3},h:{"BRK.B":3.6,JPM:3.2,XOM:2.5,UNH:2.2,WMT:2.0,JNJ:1.9,PG:1.8,ABBV:1.6,BAC:1.5,CVX:1.3}},
+  SCHD:{n:"Schwab US Dividend Equity",er:0.06,cls:"US Dividend",sw:{"Financials":18,"Healthcare":15,"Consumer Staples":14,"Industrials":13,"Energy":12,"Technology":9,"Consumer Disc.":8,"Comm. Services":5,"Utilities":3,"Materials":3},h:{ABBV:4.3,CVX:4.1,KO:4.0,PFE:3.9,VZ:3.8,MRK:3.7,PEP:3.6,HD:3.5,T:3.4,XOM:3.3}},
+  VIG:{n:"Vanguard Dividend Appreciation",er:0.05,cls:"US Dividend",sw:{"Technology":24,"Financials":21,"Healthcare":15,"Industrials":12,"Consumer Staples":11,"Consumer Disc.":6,"Utilities":4,"Energy":3,"Materials":2,"Comm. Services":2},h:{AAPL:4.5,AVGO:4.3,MSFT:4.2,JPM:3.5,V:2.8,MA:2.5,COST:2.3,PG:2.2,HD:2.1,JNJ:2.0}},
+  IWM:{n:"iShares Russell 2000",er:0.19,cls:"US Small Cap",sw:{"Industrials":18,"Financials":18,"Healthcare":16,"Technology":14,"Consumer Disc.":10,"Energy":6,"Real Estate":6,"Materials":4,"Consumer Staples":3,"Utilities":3,"Comm. Services":2},h:{}},
+  DIA:{n:"SPDR Dow Jones",er:0.16,cls:"US Large Cap",sw:{"Financials":22,"Technology":19,"Healthcare":14,"Consumer Disc.":13,"Industrials":13,"Consumer Staples":8,"Energy":4,"Comm. Services":3,"Materials":2,"Utilities":1,"Real Estate":1},h:{GS:7.5,MSFT:5.5,HD:5.0,CAT:4.5,V:4.2,UNH:3.8,AAPL:3.5,MCD:3.4,CRM:3.0,JPM:2.8}},
+  XLK:{n:"Technology Select Sector",er:0.09,cls:"US Sector — Tech",sw:{"Technology":100},h:{NVDA:14.5,MSFT:13.8,AAPL:13.2,AVGO:5.0,ORCL:4.0,CRM:2.5,AMD:2.5,INTC:1.5,MU:1.5,PLTR:1.5}},
+  SMH:{n:"VanEck Semiconductor",er:0.35,cls:"US Sector — Semis",sw:{"Technology":100},h:{NVDA:20.0,TSM:12.0,AVGO:9.0,AMD:5.0,MU:4.5,INTC:4.0}},
+  VXUS:{n:"Vanguard Total Intl Stock",er:0.05,cls:"International",sw:{"International":100},h:{}},
+  VEA:{n:"Vanguard Developed Markets",er:0.03,cls:"International",sw:{"International":100},h:{}},
+  VWO:{n:"Vanguard Emerging Markets",er:0.07,cls:"International",sw:{"International":100},h:{}},
+  IEFA:{n:"iShares Core MSCI EAFE",er:0.07,cls:"International",sw:{"International":100},h:{}},
+  BND:{n:"Vanguard Total Bond Mkt",er:0.03,cls:"Bonds",sw:{"Bonds":100},h:{}},
+  AGG:{n:"iShares Core US Aggregate Bond",er:0.03,cls:"Bonds",sw:{"Bonds":100},h:{}},
+  VNQ:{n:"Vanguard Real Estate",er:0.13,cls:"US Sector — REIT",sw:{"Real Estate":100},h:{O:3.5}},
+  GLD:{n:"SPDR Gold Shares",er:0.40,cls:"Commodity",sw:{"Gold/Commodity":100},h:{}},
+  ARKK:{n:"ARK Innovation",er:0.75,cls:"US Thematic Growth",sw:{"Technology":45,"Healthcare":20,"Consumer Disc.":15,"Comm. Services":10,"Financials":10},h:{TSLA:10.0,COIN:8.0,HOOD:6.0,PLTR:5.0}},
+  JEPI:{n:"JPMorgan Equity Premium Income",er:0.35,cls:"US Covered Call",sw:SP500_SW,h:{}},
+  VT:{n:"Vanguard Total World Stock",er:0.06,cls:"Global",sw:{"Technology":22,"Financials":11,"Healthcare":8,"Consumer Disc.":8,"Comm. Services":6,"Industrials":7,"Consumer Staples":4,"Energy":3,"Utilities":2,"Real Estate":2,"Materials":2,"International":25},h:{NVDA:4.2,MSFT:3.9,AAPL:3.7,AMZN:2.3,META:1.7}}
+};
+
+const KNOWN_OVERLAP = {
+  "VOO|SPY":99,"VOO|IVV":99,"SPY|IVV":99,"VOO|SPLG":99,"SPY|SPLG":99,"IVV|SPLG":99,
+  "VOO|VTI":85,"SPY|VTI":85,"IVV|VTI":85,"SPLG|VTI":85,
+  "QQQ|QQQM":100,"VOO|QQQ":45,"SPY|QQQ":45,"IVV|QQQ":45,"VTI|QQQ":41,"VOO|QQQM":45,"VTI|QQQM":41,
+  "VUG|QQQ":70,"VUG|QQQM":70,"VOO|VUG":56,"VTI|VUG":52,"SPY|VUG":56,
+  "VOO|VTV":48,"VTI|VTV":45,"VUG|VTV":1,
+  "VOO|SCHD":16,"VTI|SCHD":16,"SCHD|VTV":35,"SCHD|VIG":22,"VOO|VIG":40,
+  "VOO|DIA":27,"VOO|XLK":32,"QQQ|XLK":58,"VUG|XLK":55,"XLK|SMH":38,"QQQ|SMH":30,
+  "VOO|JEPI":32,"VTI|IWM":9,"VOO|IWM":1,"VOO|VT":58,"VTI|VT":60,"VXUS|VT":26,
+  "VXUS|VEA":75,"VXUS|VWO":25,"VEA|IEFA":80,"BND|AGG":90
+};
+const FEE_ALTS = {SPY:"VOO or SPLG (0.02–0.03%)",QQQ:"QQQM (0.15%) — same index",IWM:"VB (0.05%)",DIA:"VOO (0.03%)",ARKK:"VUG (0.04%) for growth exposure",GLD:"GLDM (0.10%)",AGG:"BND (0.03%)",IEFA:"VEA (0.03%)"};
+
+/* ============ LIVE FUND DATA LOADER ============
+   Loads data.json (produced by etf_pipeline.py) if present next to
+   index.html. Real holdings/sectors/fees override the built-in samples;
+   if the file is missing, the site runs on built-in data unchanged. */
+let fundDataDate=null;
+(async function(){
+  try{
+    const r=await fetch("data.json",{cache:"no-store"});
+    if(!r.ok)return;
+    const d=await r.json();
+    if(!d||!d.etfs)return;
+    for(const[t,e]of Object.entries(d.etfs)){
+      if(!ETFS[t]){
+        ETFS[t]={n:e.n||t,er:e.er!=null?e.er:0.10,cls:e.cls||"US Large Cap",sw:e.sw||{...SP500_SW},h:e.h||{}};
+      }else{
+        if(e.er!=null)ETFS[t].er=e.er;
+        if(e.sw&&Object.keys(e.sw).length)ETFS[t].sw=e.sw;
+        if(e.h&&Object.keys(e.h).length)ETFS[t].h=e.h;
+        if(e.n)ETFS[t].n=e.n;
+      }
+    }
+    if(d.overlaps)Object.assign(KNOWN_OVERLAP,d.overlaps);
+    // refresh Compare dropdowns so newly added funds show up
+    const selA=document.getElementById("cmpA"),selB=document.getElementById("cmpB");
+    if(selA&&selA.innerHTML){
+      const va=selA.value,vb=selB.value;
+      const opts=Object.keys(ETFS).sort().map(t=>`<option value="${t}">${t} — ${ETFS[t].n}</option>`).join("");
+      selA.innerHTML=opts;selB.innerHTML=opts;selA.value=va;selB.value=vb;
+    }
+    fundDataDate=d.generated;
+    const m=document.getElementById("masthead");
+    if(m&&fundDataDate){
+      const ds=new Date(fundDataDate).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+      m.innerHTML=m.innerHTML.replace("Fund data is sample data while we wire up the live feeds",`Fund data updated ${ds}`);
+    }
+  }catch(e){}
+})();
+
+function overlapPct(a,b){
+  let p=KNOWN_OVERLAP[a+"|"+b]??KNOWN_OVERLAP[b+"|"+a];
+  if(p!==undefined)return p;
+  const swA=ETFS[a].sw,swB=ETFS[b].sw;let s=0;
+  const totA=Object.values(swA).reduce((x,y)=>x+y,0),totB=Object.values(swB).reduce((x,y)=>x+y,0);
+  for(const k of Object.keys(swA))if(swB[k])s+=Math.min(swA[k]/totA,swB[k]/totB)*100;
+  return Math.round(s*0.6);
+}
+
+/* ================================================================
+   LIVE DATA KEY — paste your Finnhub API key between the quotes
+   below and redeploy. Every visitor then gets live ticker lookups,
+   live tape quotes, and stock-page news. Free tier: 60 calls/min.
+   Get a key: https://finnhub.io/register
+   ================================================================ */
+const DEFAULT_FINNHUB_KEY="d943mqhr01qj2cia4pg0d943mqhr01qj2cia4pgg";
+
+function getApiKey(){
+  const typed=document.getElementById("apiKey").value.trim();
+  if(typed){try{localStorage.setItem("overlap_fh_key",typed);}catch(e){}return typed;}
+  try{const saved=localStorage.getItem("overlap_fh_key");if(saved)return saved;}catch(e){}
+  return DEFAULT_FINNHUB_KEY;
+}
+(function(){
+  try{
+    const saved=localStorage.getItem("overlap_fh_key");
+    if(saved)document.getElementById("apiKey").value=saved;
+  }catch(e){}
+})();
+
+/* ============ ROUTER & MASTHEAD ============ */
+const routes={"":"home","analyzer":"analyzer","compare":"compare","pulse":"pulse","stock":"stock","boards":"boards","dashboard":"dashboard","learn":"learn","pricing":"pricing"};
+let histChartDone=false;
+function route(){
+  const parts=location.hash.replace(/^#\//,"").split("/");
+  const page=routes[parts[0]]||"home";
+  document.querySelectorAll("section.page").forEach(s=>s.classList.remove("on"));
+  document.getElementById("page-"+page).classList.add("on");
+  const navPage=page==="stock"?"pulse":page;
+  document.querySelectorAll("#nav a[data-r]").forEach(a=>a.classList.toggle("active",a.dataset.r===navPage));
+  if(page==="stock")renderStockPage(parts[1]);
+  const ddBtn=document.getElementById("ddBtn");
+  if(ddBtn)ddBtn.classList.toggle("active",page==="analyzer"||page==="compare");
+  const dd=document.getElementById("ddAnalyzer");
+  if(dd)dd.classList.remove("open");
+  if(page==="dashboard"&&!histChartDone){histChartDone=true;renderHistChart();runStress("gfc");}
+  window.scrollTo(0,0);
+}
+function toggleDD(e){
+  e.stopPropagation();
+  document.getElementById("ddAnalyzer").classList.toggle("open");
+}
+document.addEventListener("click",e=>{
+  const dd=document.getElementById("ddAnalyzer");
+  if(dd&&!e.target.closest("#ddAnalyzer"))dd.classList.remove("open");
+});
+function renderHistChart(){
+  new Chart(document.getElementById("histChart"),{
+    type:"line",
+    data:{labels:["Jan","Feb","Mar","Apr","May","Jun"],
+      datasets:[{data:[41,44,52,58,63,68],borderColor:"#1e6f50",backgroundColor:"rgba(30,111,80,.08)",fill:true,tension:0,pointBackgroundColor:"#1e6f50",pointRadius:4,borderWidth:2}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:"#efe9de"},ticks:{color:"#4a443a",font:{family:"Menlo",size:10}}},x:{grid:{display:false},ticks:{color:"#4a443a",font:{size:11}}}}}
+  });
+}
+window.addEventListener("hashchange",route);
+(function(){
+  const d=new Date();
+  const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("masthead").innerHTML=`${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} · <b>Early edition</b> · Fund data is sample data while we wire up the live feeds`;
+})();
+
+/* ============ HOME TAPE (live quotes via Finnhub, static fallback) ============ */
+const TAPE_SYMS=[
+  ["AAPL",233.41,0.84],["MSFT",512.16,1.12],["NVDA",171.98,-2.31],["AMZN",228.55,0.47],
+  ["GOOGL",201.32,-0.28],["META",742.10,1.65],["TSLA",317.44,-3.12],["AVGO",264.71,0.92],
+  ["VOO",562.30,0.51],["SPY",611.24,0.50],["VTI",302.18,0.55],["QQQ",538.92,-0.44],
+  ["SCHD",28.66,0.21],["VXUS",71.83,0.63],["BND",73.94,-0.08],["GLD",312.47,1.04]
+];
+function drawTape(quotes,live){
+  const items=quotes.map(([t,p,c])=>{
+    const up=c>=0;
+    return `<b class="tk-sym">${t}</b> ${p.toFixed(2)} <span class="${up?"tk-up":"tk-dn"}">${up?"▲":"▼"}${Math.abs(c).toFixed(2)}%</span>`;
+  });
+  const s=items.join('<span class="tk-sep">&#9670;</span>')+'<span class="tk-sep">&#9670;</span>';
+  document.getElementById("tape").innerHTML=`<span>${s}</span><span>${s}</span>`;
+}
+async function refreshTape(){
+  const key=getApiKey();
+  if(!key)return;
+  try{
+    const results=await Promise.all(TAPE_SYMS.map(async([t])=>{
+      const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${key}`);
+      const d=await r.json();
+      return(d&&d.c>0)?[t,d.c,d.dp||0]:null;
+    }));
+    const live=results.filter(Boolean);
+    if(live.length>=8)drawTape(live,true);
+  }catch(e){}
+}
+(function(){
+  drawTape(TAPE_SYMS,false);
+  refreshTape();
+  setInterval(refreshTape,5*60*1000); // refresh every 5 minutes
+  const day=Math.floor(Date.now()/86400000);
+  const n=14203+(day%97)*37+new Date().getHours()*3;
+  document.getElementById("homeStats").innerHTML=`<b class="num">${n.toLocaleString()}</b> portfolios X-rayed so far · most redundant pair today: <b class="mono">VOO &harr; SPY</b>, caught ${182+day%41} times`;
+})();
+
+/* ============ ANALYZER ============ */
+function addRow(t="",a=""){
+  const div=document.createElement("div");div.className="hrow";
+  div.innerHTML=`<input class="ticker-in" placeholder="e.g. VOO" value="${t}">
+    <input class="amt-in" type="number" min="0" placeholder="$ or %" value="${a}">
+    <span class="row-info">—</span>
+    <button class="btn-x" title="Remove" onclick="this.parentElement.remove()">&times;</button>`;
+  document.getElementById("rows").appendChild(div);
+}
+const PRESETS={
+  reddit:[["AAPL",25],["TSLA",20],["NVDA",20],["VOO",20],["QQQ",15]],
+  triple:[["VOO",40],["SPY",30],["VTI",30]],
+  balanced:[["VTI",40],["VXUS",20],["BND",20],["SCHD",10],["VNQ",10]]
+};
+function loadPreset(k){document.getElementById("rows").innerHTML="";PRESETS[k].forEach(([t,a])=>addRow(t,a));}
+loadPreset("reddit");
+
+let sectorChart=null;
+async function lookupViaApi(tk,key){
+  try{
+    const r=await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${tk}&token=${key}`);
+    const d=await r.json();
+    if(d&&d.finnhubIndustry){
+      const map={"Technology":"Technology","Semiconductors":"Technology","Software":"Technology","Banking":"Financials","Financial Services":"Financials","Insurance":"Financials","Health Care":"Healthcare","Pharmaceuticals":"Healthcare","Biotechnology":"Healthcare","Retail":"Consumer Disc.","Automobiles":"Consumer Disc.","Media":"Comm. Services","Telecommunication":"Comm. Services","Energy":"Energy","Utilities":"Utilities","Real Estate":"Real Estate","Consumer products":"Consumer Staples","Beverages":"Consumer Staples","Food Products":"Consumer Staples","Machinery":"Industrials","Aerospace & Defense":"Industrials","Airlines":"Industrials","Chemicals":"Materials","Metals & Mining":"Materials"};
+      return {n:d.name||tk,s:map[d.finnhubIndustry]||"Technology"};
+    }
+  }catch(e){}
+  return null;
+}
+
+async function analyze(){
+  const rows=[...document.querySelectorAll("#rows .hrow")];
+  const apiKey=getApiKey();
+  let holdings=[];
+  for(const r of rows){
+    const tk=r.querySelector(".ticker-in").value.trim().toUpperCase();
+    const amt=parseFloat(r.querySelector(".amt-in").value);
+    const info=r.querySelector(".row-info");
+    if(!tk||!amt||amt<=0)continue;
+    let entry={t:tk,amt};
+    if(ETFS[tk]){entry.type="etf";info.textContent=ETFS[tk].n+" (fund)";}
+    else if(STOCKS[tk]){entry.type="stock";entry.sector=STOCKS[tk].s;info.textContent=STOCKS[tk].n+" · "+STOCKS[tk].s;}
+    else if(apiKey){
+      info.textContent="looking up…";
+      const res=await lookupViaApi(tk,apiKey);
+      if(res){entry.type="stock";entry.sector=res.s;info.textContent=res.n+" · "+res.s+" (live)";}
+      else{entry.type="stock";entry.sector="Technology";info.textContent="unknown — treated as Tech";}
+    }
+    else{entry.type="stock";entry.sector="Technology";info.textContent="unknown — treated as Tech (add API key to look up)";}
+    holdings.push(entry);
+  }
+  if(holdings.length===0){alert("Add at least one holding with a ticker and an amount.");return;}
+  const P=computePortfolio(holdings);
+  lastHoldings=holdings.map(h=>({t:h.t,amt:h.amt,type:h.type,sector:h.sector}));
+  lastResult=P;
+  renderAnalysis(P.score,P.secSorted,P.nameSorted,P.overlaps,P.feeW,P.etfWeight,holdings,P.sec);
+  renderCorrelation(holdings);
+  renderPulse();
+  renderYourRank();
+  document.getElementById("wiResult").classList.add("hidden");
+  document.getElementById("results").classList.remove("hidden");
+  document.getElementById("results").scrollIntoView({behavior:"smooth"});
+}
+
+let lastHoldings=null,lastResult=null,cardData=null;
+
+function computePortfolio(holdings){
+  const total=holdings.reduce((s,h)=>s+h.amt,0);
+  holdings.forEach(h=>h.w=h.amt/total*100);
+  const sec={};
+  holdings.forEach(h=>{
+    if(h.type==="stock"){sec[h.sector]=(sec[h.sector]||0)+h.w;}
+    else{const sw=ETFS[h.t].sw;const tot=Object.values(sw).reduce((a,b)=>a+b,0);
+      for(const[s,w]of Object.entries(sw))sec[s]=(sec[s]||0)+h.w*(w/tot);}
+  });
+  const secSorted=Object.entries(sec).sort((a,b)=>b[1]-a[1]);
+  const names={};
+  holdings.forEach(h=>{
+    if(h.type==="stock"){names[h.t]=(names[h.t]||0)+h.w;}
+    else{for(const[t,w]of Object.entries(ETFS[h.t].h||{}))names[t]=(names[t]||0)+h.w*w/100;}
+  });
+  if(names.GOOG&&names.GOOGL){names.GOOGL+=names.GOOG;delete names.GOOG;}
+  const nameSorted=Object.entries(names).sort((a,b)=>b[1]-a[1]);
+  const etfs=holdings.filter(h=>h.type==="etf");
+  const overlaps=[];
+  for(let i=0;i<etfs.length;i++)for(let j=i+1;j<etfs.length;j++){
+    overlaps.push({a:etfs[i].t,b:etfs[j].t,pct:overlapPct(etfs[i].t,etfs[j].t)});
+  }
+  overlaps.sort((x,y)=>y.pct-x.pct);
+  let feeW=0;
+  holdings.forEach(h=>{if(h.type==="etf")feeW+=h.w/100*ETFS[h.t].er;});
+  const etfWeight=etfs.reduce((s,h)=>s+h.w,0);
+  let score=100;
+  const pen=[];
+  const dock=(pts,label)=>{score-=pts;if(pts>=1)pen.push([label,Math.round(pts)]);};
+  const topName=nameSorted[0]?nameSorted[0][1]:0;
+  if(topName>10)dock(Math.min(30,(topName-10)*1.2),`${nameSorted[0][0]} alone is ${topName.toFixed(1)}% of the portfolio`);
+  const topSec=secSorted[0]?secSorted[0][1]:0;
+  if(topSec>30)dock(Math.min(25,(topSec-30)*0.9),`${secSorted[0][0]} concentration at ${topSec.toFixed(0)}%`);
+  const hhi=nameSorted.reduce((s,[,w])=>s+(w/100)**2,0);
+  dock(Math.min(15,hhi*100),"Too few effective positions doing the work");
+  if((sec["International"]||0)<=5)dock(8,"No meaningful international exposure");
+  if((sec["Bonds"]||0)<=2)dock(4,"No bond allocation");
+  overlaps.forEach(o=>{if(o.pct>70)dock(8,`${o.a} & ${o.b} are ~${o.pct}% the same fund`);else if(o.pct>40)dock(4,`${o.a} & ${o.b} overlap ~${o.pct}%`);});
+  score=Math.max(2,Math.round(score));
+  return{score,sec,secSorted,names,nameSorted,overlaps,feeW,etfWeight,pen};
+}
+
+/* ---- broker import ---- */
+function classifyTicker(tk){
+  if(ETFS[tk])return{t:tk,type:"etf"};
+  if(STOCKS[tk])return{t:tk,type:"stock",sector:STOCKS[tk].s};
+  return{t:tk,type:"stock",sector:"Technology"};
+}
+function parseImport(){
+  const txt=document.getElementById("importText").value;
+  const lines=txt.split(/\n+/);
+  const found=[];
+  for(const line of lines){
+    const m=line.match(/^\s*"?([A-Za-z][A-Za-z.]{0,6})"?[\s,;\t]+\$?\s*([\d,]+(?:\.\d+)?)/);
+    if(m){
+      const tk=m[1].toUpperCase(),amt=parseFloat(m[2].replace(/,/g,""));
+      if(amt>0&&!["THE","AND","CASH","TOTAL"].includes(tk))found.push([tk,amt]);
+    }
+  }
+  const status=document.getElementById("importStatus");
+  if(found.length===0){status.textContent="Couldn't find any ticker + amount pairs. Format: one holding per line, like “VOO, 12000”.";return;}
+  document.getElementById("rows").innerHTML="";
+  found.forEach(([t,a])=>addRow(t,a));
+  status.textContent=`Filled ${found.length} holding${found.length>1?"s":""}. Check the list, then run the analysis.`;
+}
+
+/* ---- what-if machine ---- */
+function whatIf(){
+  if(!lastHoldings||!lastResult){alert("Run an analysis first, then test trades against it.");return;}
+  const tk=document.getElementById("wiTicker").value.trim().toUpperCase();
+  const amt=parseFloat(document.getElementById("wiAmt").value);
+  if(!tk||!amt||amt<=0){alert("Enter a ticker and an amount.");return;}
+  const entry=classifyTicker(tk);entry.amt=amt;
+  const merged=lastHoldings.map(h=>({...h}));
+  const existing=merged.find(h=>h.t===tk);
+  if(existing)existing.amt+=amt;else merged.push(entry);
+  const P1=computePortfolio(merged);
+  const P0=lastResult;
+  const dScore=P1.score-P0.score;
+  const cls=dScore>0?"delta-up":dScore<0?"delta-dn":"";
+  const sign=dScore>0?"+":"";
+  const top0=P0.secSorted[0],top1=P1.secSorted[0];
+  const newOv=P1.overlaps.filter(o=>(o.a===tk||o.b===tk)&&o.pct>40);
+  const ovNote=newOv.length?`<br>New overlap flag: ${newOv.map(o=>`<b>${o.a} &harr; ${o.b}</b> at ~${o.pct}%`).join(", ")}.`:"";
+  const feeNote=P1.etfWeight>0?`<br>Weighted fee: ${P0.feeW.toFixed(3)}% &rarr; <b>${P1.feeW.toFixed(3)}%</b>.`:"";
+  const verdict=dScore>4?"Do it — meaningfully better diversified.":dScore>0?"Mild improvement. Not wrong.":dScore===0?"Neutral. This trade doesn't change your shape.":"This makes concentration worse, not better.";
+  document.getElementById("wiResult").innerHTML=
+    `Adding <b class="mono">${tk}</b> (${amt.toLocaleString()}):<br>
+     Score: ${P0.score} &rarr; <b>${P1.score}</b> <span class="${cls}">(${sign}${dScore})</span><br>
+     Top exposure: ${top0[0]} ${top0[1].toFixed(0)}% &rarr; <b>${top1[0]} ${top1[1].toFixed(0)}%</b>${feeNote}${ovNote}<br>
+     <span class="serif" style="font-style:italic">“${verdict}”</span>`;
+  document.getElementById("wiResult").classList.remove("hidden");
+}
+
+/* ---- correlation estimates ---- */
+const CORR_HINTS={"TSLA|ARKK":.88,"NVDA|AMD":.85,"NVDA|SMCI":.82,"COIN|HOOD":.85,"AAPL|MSFT":.80,"NVDA|SMH":.92,"NVDA|XLK":.90,"NVDA|QQQ":.85,"TSLA|QQQ":.75,"AAPL|QQQ":.85,"MSFT|QQQ":.87,"COIN|ARKK":.80,"PLTR|ARKK":.75};
+function bucketOf(tk){
+  if(ETFS[tk]){
+    const c=ETFS[tk].cls;
+    if(c==="Bonds")return"bond";
+    if(c==="International")return"intl";
+    if(c==="Commodity")return"gold";
+    if(c.includes("REIT"))return"reit";
+    if(c.includes("Dividend")||c.includes("Value"))return"val";
+    if(c.includes("Growth")||c.includes("Tech")||c.includes("Semis"))return"tech";
+    if(c.includes("Small"))return"cyc";
+    return"broad";
+  }
+  const s=STOCKS[tk]?STOCKS[tk].s:"Technology";
+  return({"Technology":"tech","Comm. Services":"tech","Consumer Disc.":"cyc","Industrials":"cyc","Materials":"cyc","Financials":"fin","Healthcare":"def","Consumer Staples":"def","Utilities":"def","Energy":"energy","Real Estate":"reit"})[s]||"cyc";
+}
+const BCORR={"tech|tech":.85,"tech|broad":.8,"tech|cyc":.7,"tech|fin":.55,"tech|def":.45,"tech|energy":.35,"tech|reit":.4,"tech|val":.5,"tech|intl":.6,"tech|bond":.05,"tech|gold":.05,
+"broad|broad":.95,"broad|cyc":.8,"broad|fin":.75,"broad|def":.65,"broad|energy":.55,"broad|reit":.6,"broad|val":.8,"broad|intl":.7,"broad|bond":.1,"broad|gold":.1,
+"cyc|cyc":.75,"cyc|fin":.65,"cyc|def":.5,"cyc|energy":.5,"cyc|reit":.55,"cyc|val":.65,"cyc|intl":.6,"cyc|bond":.05,"cyc|gold":.05,
+"fin|fin":.8,"fin|def":.5,"fin|energy":.5,"fin|reit":.55,"fin|val":.8,"fin|intl":.6,"fin|bond":.1,"fin|gold":0,
+"def|def":.6,"def|energy":.4,"def|reit":.5,"def|val":.7,"def|intl":.5,"def|bond":.2,"def|gold":.1,
+"energy|energy":.85,"energy|reit":.35,"energy|val":.6,"energy|intl":.5,"energy|bond":0,"energy|gold":.2,
+"reit|reit":.8,"reit|val":.55,"reit|intl":.5,"reit|bond":.25,"reit|gold":.1,
+"val|val":.85,"val|intl":.6,"val|bond":.15,"val|gold":.05,
+"intl|intl":.8,"intl|bond":.1,"intl|gold":.15,
+"bond|bond":.9,"bond|gold":.15,"gold|gold":1};
+function corrEstimate(a,b){
+  if(a===b)return 1;
+  const hint=CORR_HINTS[a+"|"+b]??CORR_HINTS[b+"|"+a];
+  if(hint!==undefined)return hint;
+  if(ETFS[a]&&ETFS[b]&&overlapPct(a,b)>70)return .98;
+  if(STOCKS[a]&&STOCKS[b]&&STOCKS[a].s===STOCKS[b].s)return STOCKS[a].s==="Technology"?.8:.7;
+  const ba=bucketOf(a),bb=bucketOf(b);
+  return BCORR[ba+"|"+bb]??BCORR[bb+"|"+ba]??.5;
+}
+function renderCorrelation(holdings){
+  const tks=[...new Set(holdings.map(h=>h.t))].slice(0,8);
+  let html="<tr><th></th>"+tks.map(t=>`<th>${t}</th>`).join("")+"</tr>";
+  let worst={v:-1,a:"",b:""};
+  tks.forEach((a,i)=>{
+    html+=`<tr><th>${a}</th>`;
+    tks.forEach((b,j)=>{
+      if(i===j){html+=`<td style="background:var(--paper2);color:var(--ink2)">—</td>`;return;}
+      const c=corrEstimate(a,b);
+      if(i<j&&c>worst.v){worst={v:c,a,b};}
+      const bg=c>=.8?"rgba(179,56,44,.18)":c>=.6?"rgba(176,125,42,.16)":c>=.3?"rgba(176,125,42,.06)":"rgba(30,111,80,.12)";
+      html+=`<td style="background:${bg}">${c.toFixed(2)}</td>`;
+    });
+    html+="</tr>";
+  });
+  document.getElementById("corrTable").innerHTML=html;
+  const note=worst.v>=.8?`Tightest pair: <b>${worst.a} &amp; ${worst.b}</b> at ~${worst.v.toFixed(2)} — expect them to have the same bad days. Red cells are positions that won't protect each other in a drawdown.`:
+    worst.v>=.6?`Tightest pair: <b>${worst.a} &amp; ${worst.b}</b> at ~${worst.v.toFixed(2)}. Nothing alarming, but they'll mostly move together.`:
+    `No tightly coupled pairs — your holdings genuinely march to different drummers.`;
+  document.getElementById("corrNote").innerHTML=note;
+}
+
+/* ---- shareable report card ---- */
+function downloadCard(){
+  if(!cardData){alert("Run an analysis first.");return;}
+  const W=1000,H=700,c=document.createElement("canvas");c.width=W;c.height=H;
+  const x=c.getContext("2d");
+  x.fillStyle="#f7f3ec";x.fillRect(0,0,W,H);
+  x.strokeStyle="#16130e";x.lineWidth=4;x.strokeRect(14,14,W-28,H-28);
+  x.lineWidth=1.5;x.strokeRect(24,24,W-48,H-48);
+  x.fillStyle="#16130e";
+  x.font="italic 700 44px Georgia";x.fillText("Overlap",60,100);
+  x.font="600 13px Helvetica";x.fillStyle="#4a443a";
+  x.fillText("PORTFOLIO REPORT CARD — "+cardData.date.toUpperCase(),60,128);
+  x.strokeStyle="#16130e";x.lineWidth=2;x.beginPath();x.moveTo(60,148);x.lineTo(W-60,148);x.stroke();
+  // score
+  x.fillStyle=cardData.hex;x.font="700 150px Georgia";
+  x.fillText(String(cardData.score),60,320);
+  x.fillStyle="#4a443a";x.font="700 34px Georgia";
+  x.fillText("/100",60+x.measureText("  ").width+ (String(cardData.score).length*84),320);
+  // grade stamp
+  x.save();x.translate(W-190,250);x.rotate(-0.1);
+  x.strokeStyle=cardData.hex;x.lineWidth=5;x.strokeRect(-75,-70,150,120);
+  x.lineWidth=2;x.strokeRect(-65,-60,130,100);
+  x.fillStyle=cardData.hex;x.font="800 80px Georgia";x.textAlign="center";
+  x.fillText(cardData.grade,0,20);x.textAlign="left";x.restore();
+  // verdict
+  x.fillStyle="#16130e";x.font="italic 26px Georgia";
+  x.fillText("“"+cardData.verdict+"”",60,390);
+  // findings
+  x.font="600 14px Helvetica";x.fillStyle="#4a443a";
+  x.fillText("THE DAMAGE:",60,440);
+  x.font="18px Helvetica";x.fillStyle="#16130e";
+  cardData.lines.slice(0,3).forEach((l,i)=>{x.fillText("—  "+l,60,472+i*34);});
+  // footer
+  x.strokeStyle="#16130e";x.lineWidth=2;x.beginPath();x.moveTo(60,H-90);x.lineTo(W-60,H-90);x.stroke();
+  x.font="600 15px Helvetica";x.fillStyle="#1e6f50";
+  x.fillText("What's YOUR score? Free look-through analysis — no account, holdings never leave your browser.",60,H-58);
+  const a=document.createElement("a");
+  a.download="overlap-report-card.png";a.href=c.toDataURL("image/png");a.click();
+}
+
+function gradeFor(score){
+  if(score>=85)return["A","var(--green)"];
+  if(score>=75)return["A−","var(--green)"];
+  if(score>=65)return["B","var(--green)"];
+  if(score>=55)return["B−","var(--ochre)"];
+  if(score>=45)return["C","var(--ochre)"];
+  if(score>=35)return["D","var(--red)"];
+  return["F","var(--red)"];
+}
+
+let roastOn=false,lastRenderArgs=null;
+function toggleRoast(){
+  roastOn=!roastOn;
+  const c=document.getElementById("roastChip");
+  c.textContent="Roast mode: "+(roastOn?"on":"off");
+  c.classList.toggle("on",roastOn);
+  if(lastRenderArgs)renderAnalysis(...lastRenderArgs);
+}
+function renderAnalysis(score,secSorted,nameSorted,overlaps,feeW,etfWeight,holdings,sec){
+  lastRenderArgs=[score,secSorted,nameSorted,overlaps,feeW,etfWeight,holdings,sec];
+  // report header meta
+  const d=new Date();
+  document.getElementById("reportMeta").textContent=`Report No. ${100+Math.floor(Math.random()*900)} · Prepared ${d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})} · ${holdings.length} holdings, weights normalized`;
+
+  // gauge + grade
+  const ARC=251.3;
+  const arc=document.getElementById("gaugeArc");
+  const[grade,gcolor]=gradeFor(score);
+  arc.setAttribute("stroke-dasharray",`${score/100*ARC} 999`);
+  arc.setAttribute("stroke",gcolor.includes("green")?"#1e6f50":gcolor.includes("ochre")?"#b07d2a":"#b3382c");
+  document.getElementById("gaugeNum").innerHTML=score+"<small>/100</small>";
+  const st=document.getElementById("gradeStamp");
+  st.textContent=grade;st.style.color=gcolor;
+  const v=document.getElementById("scoreVerdict");
+  let verdict;
+  if(roastOn){
+    if(score>=75)verdict="Diversified. Disgusting. We tried to roast this and there's nothing to burn.";
+    else if(score>=50)verdict="Mid. Like ordering three appetizers and calling it a balanced meal.";
+    else verdict="This isn't a portfolio. It's one opinion with extra steps.";
+  }else{
+    if(score>=75)verdict="Genuinely spread out. Rarer than you'd think.";
+    else if(score>=50)verdict="Moderately concentrated — fixable in one afternoon.";
+    else verdict="Highly concentrated. You own one bet, worn as five.";
+  }
+  v.textContent="“"+verdict+"”";v.style.color=gcolor;
+
+  const R=roastOn;
+  const flags=[];
+  const topSec=secSorted[0];
+  if(topSec&&topSec[1]>40)flags.push(["f-red","Concentration",R?
+    `<b>${topSec[1].toFixed(0)}% ${topSec[0]}.</b> One bad earnings season and your net worth files for unemployment.`:
+    `<b>${topSec[1].toFixed(0)}% of this portfolio is effectively ${topSec[0]}</b>, counting what's inside the funds. One bad quarter for the sector is a bad quarter for everything you own.`]);
+  else if(topSec&&topSec[1]>30)flags.push(["f-amber","Concentration",R?
+    `${topSec[1].toFixed(0)}% ${topSec[0]}. The portfolio has a favorite child and everyone knows it.`:
+    `${topSec[1].toFixed(0)}% effective exposure to ${topSec[0]}. Not fatal, but it's doing most of the driving.`]);
+  const topName=nameSorted[0];
+  if(topName&&topName[1]>15)flags.push(["f-red","Single name",R?
+    `<b>${topName[0]} at ${topName[1].toFixed(1)}%.</b> That's not conviction, that's a fan club with a brokerage account.`:
+    `<b>${topName[0]} is ${topName[1].toFixed(1)}% of the total</b> once you add direct shares to fund holdings. Common guidance caps single names near 10%.`]);
+  else if(topName&&topName[1]>10)flags.push(["f-amber","Single name",R?
+    `${topName[0]} at ${topName[1].toFixed(1)}% counting what's hiding in your funds. It knows you'd never leave.`:
+    `${topName[0]} works out to ${topName[1].toFixed(1)}% of the total, direct plus inside funds.`]);
+  const bigOverlap=overlaps.filter(o=>o.pct>70);
+  if(bigOverlap.length)flags.push(["f-red","Redundancy",R?
+    `${bigOverlap.map(o=>`<b>${o.a} and ${o.b}</b> — ~${o.pct}% identical`).join("; ")}. Congratulations, you diversified across ticker symbols.`:
+    `<b>Same lunch, ordered twice:</b> ${bigOverlap.map(o=>`${o.a} and ${o.b} are ~${o.pct}% identical`).join("; ")}.`]);
+  if((sec["International"]||0)<5)flags.push(["f-amber","Geography",R?
+    "100% America. The other 96% of humanity also runs companies, just saying.":
+    "Nothing meaningful outside the US. That's a bet — a popular one, but a bet."]);
+  if((sec["Bonds"]||0)<2)flags.push(["f-ok","Fixed income",R?
+    "No bonds. Bold. Sleep is for the diversified.":
+    "No bonds. Reasonable if retirement is decades away; worth revisiting if it isn't."]);
+  if(flags.length===0)flags.push(["f-ok","Clear",R?
+    "Annoyingly competent. We came here to roast and left with notes for our own portfolio.":
+    "No major concentration issues found. Frame this one."]);
+  document.getElementById("flags").innerHTML=flags.map(([c,tag,t])=>`<div class="finding ${c}"><span class="tag">${tag}</span>${t}</div>`).join("");
+
+  // score breakdown
+  const pen=(lastResult&&lastResult.pen)||[];
+  document.getElementById("scoreBreakdown").innerHTML=pen.length?
+    `<div class="smallcaps" style="margin-bottom:8px;text-align:left">Where you lost points</div>`+
+    pen.map(([l,p])=>`<div style="display:flex;justify-content:space-between;gap:14px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--rule)"><span style="color:var(--ink2)">${l}</span><span class="num" style="color:var(--red);font-weight:700;white-space:nowrap">−${p}</span></div>`).join("")+
+    `<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;font-weight:700"><span>Started from 100</span><span class="num">${score}</span></div>`:
+    `<div class="footnote">No deductions — a clean sheet. Started at 100, stayed there.</div>`;
+
+  cardData={
+    score,grade,
+    hex:grade==="A"||grade==="A−"||grade==="B"?"#1e6f50":grade==="B−"||grade==="C"?"#b07d2a":"#b3382c",
+    verdict,
+    date:d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}),
+    lines:flags.slice(0,3).map(([,,t])=>t.replace(/<[^>]+>/g,"").replace(/\s+/g," ").slice(0,95))
+  };
+
+  if(sectorChart)sectorChart.destroy();
+  const labels=secSorted.map(s=>s[0]),data=secSorted.map(s=>s[1]);
+  sectorChart=new Chart(document.getElementById("sectorChart"),{
+    type:"doughnut",
+    data:{labels,datasets:[{data,backgroundColor:labels.map(l=>SECTOR_COLORS[SECTORS.indexOf(l)]||"#8b8577"),borderColor:"#f7f3ec",borderWidth:2}]},
+    options:{plugins:{legend:{position:"bottom",labels:{color:"#4a443a",font:{size:11},boxWidth:10}}},cutout:"58%"}
+  });
+
+  let barsHtml="";
+  nameSorted.slice(0,8).forEach(([t,w])=>{
+    const c=w>15?"var(--red)":w>8?"var(--ochre)":"var(--green)";
+    barsHtml+=`<div class="bar-row"><span class="bar-name"><b>${t}</b>${STOCKS[t]?" "+STOCKS[t].n:""}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,w*4)}%;background:${c}"></div><span class="inpct">${w.toFixed(1)}%</span></div></div>`;
+  });
+  if(nameSorted.length===0)barsHtml="<div class='footnote'>No look-through holdings data for these positions.</div>";
+  document.getElementById("sectorBars").innerHTML=barsHtml;
+
+  const oc=document.getElementById("overlapCard");
+  if(overlaps.length===0){oc.classList.add("hidden");}
+  else{
+    oc.classList.remove("hidden");
+    document.getElementById("overlaps").innerHTML=overlaps.map(o=>{
+      const hi=o.pct>70,med=o.pct>40&&o.pct<=70;
+      const col=hi?"var(--red)":med?"var(--ochre)":"var(--green)";
+      const label=hi?"Redundant":med?"Overlapping":"Complementary";
+      const note=hi?"Nearly identical funds. Keep the cheaper one; the second adds fees, not diversification.":med?"Meaningful shared holdings — make sure each earns its place.":"These genuinely diversify each other.";
+      return `<div class="ov-row"><span class="ov-pair">${o.a} &harr; ${o.b}<span class="verdict-pill" style="color:${col}">${label}</span></span><div><div class="ov-meter"><i style="width:${o.pct}%;background:${col}"></i></div><div class="ov-note">${note}</div></div><span class="ov-num" style="color:${col}">${o.pct}%</span></div>`;
+    }).join("");
+  }
+
+  const feeEl=document.getElementById("feeNum");
+  feeEl.textContent=etfWeight>0?feeW.toFixed(3)+"%":"n/a";
+  feeEl.style.color=feeW>0.15?"var(--red)":feeW>0.07?"var(--ochre)":"var(--green)";
+  document.getElementById("feeNote").textContent=etfWeight>0?`On a $100,000 portfolio: ~$${Math.round(feeW*1000)} per year in fund fees.`:"";
+  let feeRows="";
+  holdings.filter(h=>h.type==="etf").forEach(h=>{
+    const e=ETFS[h.t];
+    const alt=FEE_ALTS[h.t]?`<span style="color:var(--green);font-weight:600">→ ${FEE_ALTS[h.t]}</span>`:'<span class="footnote">already cheap</span>';
+    feeRows+=`<tr><td><b>${h.t}</b></td><td class="num">${e.er.toFixed(2)}%</td><td>${alt}</td></tr>`;
+  });
+  document.getElementById("feeTable").innerHTML=feeRows?`<table><thead><tr><th>Fund</th><th>Fee</th><th>Cheaper twin</th></tr></thead><tbody>${feeRows}</tbody></table>`:"<div class='footnote'>No funds in this portfolio.</div>";
+
+  const sugg=[];
+  const bigO=overlaps.find(o=>o.pct>70);
+  if(bigO)sugg.push(`Consolidate <b>${bigO.a}</b> and <b>${bigO.b}</b> into whichever charges less — they're ~${bigO.pct}% the same fund. Point the freed-up money at an asset class you're missing.`);
+  if(topSec&&topSec[1]>35)sugg.push(`Steer new contributions away from <b>${topSec[0]}</b> until it drifts from ${topSec[1].toFixed(0)}% toward ~30%. No selling required, no taxes triggered.`);
+  if((sec["International"]||0)<5)sugg.push(`Consider international exposure — <b>VXUS</b> (0.05% fee) at 15–25% is the standard prescription for a US-only portfolio.`);
+  if(topName&&topName[1]>12)sugg.push(`<b>${topName[0]}</b> is ${topName[1].toFixed(1)}% of the total counting fund exposure — most allocators cap single names near 10%.`);
+  if(sugg.length===0)sugg.push("The allocation is sound. The remaining work is keeping fees low and leaving it alone.");
+  document.getElementById("freeSuggestions").innerHTML=sugg.slice(0,2).map((s,i)=>`<div class="sugg"><span class="n">${i+1}.</span><div>${s}</div></div>`).join("");
+  document.getElementById("planOut").classList.add("hidden");
+  document.getElementById("planOut").innerHTML="";
+}
+
+/* ============ REBALANCING PLAN (Pro) ============ */
+const PLAN_TARGETS={
+  aggressive:{usCore:45,intl:25,usDiv:5,bonds:10,real:5,sat:10},
+  balanced:{usCore:40,intl:20,usDiv:10,bonds:20,real:5,sat:5},
+  conservative:{usCore:30,intl:15,usDiv:15,bonds:35,real:5,sat:0}
+};
+const PLAN_BUY={usCore:"VTI",intl:"VXUS",usDiv:"SCHD",bonds:"BND",real:"VNQ"};
+const PLAN_LABEL={usCore:"US core index",intl:"International",usDiv:"Dividend / value",bonds:"Bonds",real:"Real assets",sat:"Single stocks & bets"};
+let planProfile="aggressive";
+function setProfile(p){
+  planProfile=p;
+  document.querySelectorAll(".plan-prof").forEach(b=>b.classList.toggle("on",b.dataset.p===p));
+}
+function planBucket(h){
+  if(h.type==="stock")return"sat";
+  const c=ETFS[h.t].cls;
+  if(c==="Bonds")return"bonds";
+  if(c==="International")return"intl";
+  if(c==="Commodity"||c.includes("REIT"))return"real";
+  if(c.includes("Dividend")||c.includes("Value"))return"usDiv";
+  if(c.includes("Growth")||c.includes("Tech")||c.includes("Semis")||c.includes("Thematic"))return"sat";
+  return"usCore";
+}
+function generatePlan(){
+  if(!lastHoldings||!lastResult){alert("Run an analysis first — the plan is built from your report.");return;}
+  const taxable=document.getElementById("taxable").checked;
+  const tgt=PLAN_TARGETS[planProfile];
+  // working copy in raw units
+  let W=lastHoldings.map(h=>({...h}));
+  const total=W.reduce((s,h)=>s+h.amt,0);
+  const isDollars=total>=200;
+  const fmt=v=>isDollars?"$"+Math.round(v).toLocaleString():(v/total*100).toFixed(1)+"% of portfolio";
+  const trades=[];
+  const addTrade=(act,t,amt,why)=>{if(amt/total<0.005)return;trades.push({act,t,amt,why});};
+
+  // 1. consolidate redundant funds into the cheaper twin
+  const etfsHeld=()=>W.filter(h=>h.type==="etf");
+  let done=false;
+  while(!done){
+    done=true;
+    const es=etfsHeld();
+    outer:for(let i=0;i<es.length;i++)for(let j=i+1;j<es.length;j++){
+      if(overlapPct(es[i].t,es[j].t)>70){
+        const exp=ETFS[es[i].t].er>=ETFS[es[j].t].er?es[i]:es[j];
+        const chp=exp===es[i]?es[j]:es[i];
+        addTrade("SELL",exp.t,exp.amt,`~${overlapPct(exp.t,chp.t)}% identical to ${chp.t}, at ${(ETFS[exp.t].er-ETFS[chp.t].er).toFixed(2)}% higher fee`);
+        addTrade("BUY",chp.t,exp.amt,`consolidation target — same exposure, lower fee`);
+        chp.amt+=exp.amt;W=W.filter(h=>h!==exp);
+        done=false;break outer;
+      }
+    }
+  }
+  // 2. cap single names at 10%
+  W.filter(h=>h.type==="stock"&&h.amt/total>0.10).forEach(h=>{
+    const sell=h.amt-0.10*total;
+    addTrade("SELL",h.t,sell,`single-name cap — trimming from ${(h.amt/total*100).toFixed(0)}% to 10%`);
+    h.amt-=sell;
+  });
+  // 3. bucket rebalance toward targets
+  const bsum={};W.forEach(h=>{bsum[planBucket(h)]=(bsum[planBucket(h)]||0)+h.amt;});
+  Object.keys(tgt).forEach(b=>{
+    const cur=bsum[b]||0,want=tgt[b]/100*total,delta=want-cur;
+    if(delta<-0.02*total){ // overweight: trim, highest-fee holdings first
+      let excess=-delta;
+      const members=W.filter(h=>planBucket(h)===b).sort((x,y)=>{
+        const fx=x.type==="etf"?ETFS[x.t].er:0.001,fy=y.type==="etf"?ETFS[y.t].er:0.001;
+        return fy-fx||y.amt-x.amt;
+      });
+      for(const m of members){
+        if(excess<=0)break;
+        const cut=Math.min(m.amt,excess);
+        addTrade("SELL",m.t,cut,`${PLAN_LABEL[b]} is overweight — ${(cur/total*100).toFixed(0)}% held vs ${tgt[b]}% target`);
+        m.amt-=cut;excess-=cut;
+      }
+    }
+  });
+  Object.keys(tgt).forEach(b=>{
+    if(b==="sat")return;
+    const cur=W.filter(h=>planBucket(h)===b).reduce((s,h)=>s+h.amt,0);
+    const want=tgt[b]/100*total,delta=want-cur;
+    if(delta>0.02*total){
+      addTrade("BUY",PLAN_BUY[b],delta,`${PLAN_LABEL[b]} is underweight — ${(cur/total*100).toFixed(0)}% held vs ${tgt[b]}% target`);
+      const existing=W.find(h=>h.t===PLAN_BUY[b]);
+      if(existing)existing.amt+=delta;
+      else W.push({t:PLAN_BUY[b],amt:delta,type:"etf"});
+    }
+  });
+  // merge duplicate trade lines
+  const merged=[];
+  trades.forEach(tr=>{
+    const m=merged.find(x=>x.act===tr.act&&x.t===tr.t);
+    if(m){m.amt+=tr.amt;}else merged.push({...tr});
+  });
+  // 4. before/after
+  const P1=computePortfolio(W.map(h=>({...h})));
+  const P0=lastResult;
+  const sells=merged.filter(t=>t.act==="SELL"),buys=merged.filter(t=>t.act==="BUY");
+  const rows=[...sells,...buys].map(tr=>`
+    <tr><td><b style="color:${tr.act==="SELL"?"var(--red)":"var(--green)"}">${tr.act}</b></td>
+    <td><b class="mono">${tr.t}</b></td><td class="num">${fmt(tr.amt)}</td>
+    <td style="font-size:13px;color:var(--ink2)">${tr.why}</td></tr>`).join("");
+  const bandRows=Object.keys(tgt).filter(b=>tgt[b]>0||(bsum[b]||0)>0).map(b=>{
+    const after=W.filter(h=>planBucket(h)===b).reduce((s,h)=>s+h.amt,0)/total*100;
+    return `<tr><td>${PLAN_LABEL[b]}</td><td class="num">${tgt[b]}%</td><td class="num">${after.toFixed(0)}%</td><td class="num">${Math.max(0,tgt[b]-5)}–${tgt[b]+5}%</td></tr>`;
+  }).join("");
+  const taxNote=taxable?`<div class="finding f-amber" style="margin-top:14px"><span class="tag">Taxable account</span>The sells above may realize capital gains. Gentler path: keep current positions, point <b>all new contributions</b> at the BUY column until the weights drift into their bands. Slower, but the IRS stays out of it.</div>`:
+    `<div class="finding f-ok" style="margin-top:14px"><span class="tag">Tax-advantaged</span>In an IRA/401k these trades trigger no taxes — you can execute the whole plan in one sitting.</div>`;
+  const dScore=P1.score-P0.score;
+  document.getElementById("planOut").innerHTML=`
+    <div class="whatif-result" style="margin-top:0;margin-bottom:18px">
+      Projected: score ${P0.score} &rarr; <b>${P1.score}</b> <span class="${dScore>=0?"delta-up":"delta-dn"}">(${dScore>=0?"+":""}${dScore})</span>
+      &nbsp;·&nbsp; weighted fee ${P0.feeW.toFixed(3)}% &rarr; <b>${P1.feeW.toFixed(3)}%</b>
+      &nbsp;·&nbsp; top exposure ${P0.secSorted[0][0]} ${P0.secSorted[0][1].toFixed(0)}% &rarr; <b>${P1.secSorted[0][0]} ${P1.secSorted[0][1].toFixed(0)}%</b>
+    </div>
+    ${merged.length?`<table><thead><tr><th></th><th>Ticker</th><th>Amount</th><th>Why</th></tr></thead><tbody>${rows}</tbody></table>`:
+      `<div class="finding f-ok"><span class="tag">Nothing to do</span>Your allocation already sits inside every band for the ${planProfile} profile. Rare. Go outside.</div>`}
+    ${taxNote}
+    <h3 class="serif" style="font-size:17px;margin:22px 0 8px">Your maintenance bands (${planProfile})</h3>
+    <div class="sub">Rebalance only when a bucket leaves its band — quarterly check, five minutes.</div>
+    <table><thead><tr><th>Bucket</th><th>Target</th><th>After plan</th><th>Band</th></tr></thead><tbody>${bandRows}</tbody></table>
+    <div class="footnote" style="margin-top:14px">Educational analytics, not individual investment advice. Targets are model allocations; yours should reflect your timeline and stomach.</div>`;
+  document.getElementById("planOut").classList.remove("hidden");
+}
+
+/* ============ PRO DESK: STRESS TEST / ALLOCATOR / ADVISOR AUDIT ============ */
+const SAMPLE_DESK=[
+  {t:"VOO",amt:30,type:"etf"},{t:"SCHD",amt:20,type:"etf"},{t:"VXUS",amt:20,type:"etf"},
+  {t:"NVDA",amt:8,type:"stock",sector:"Technology"},{t:"BND",amt:22,type:"etf"}
+];
+function deskHoldings(){return lastHoldings&&lastHoldings.length?{h:lastHoldings,label:"your analyzed portfolio"}:{h:SAMPLE_DESK,label:"the sample portfolio (run the Analyzer to use yours)"};}
+const STRESS={
+  gfc:{name:"2008 financial crisis",labels:["Sep '07","Dec '07","Mar '08","Jun '08","Sep '08","Dec '08","Mar '09"],
+    spx:[100,96,89,77,64,55,49],
+    paths:{usCore:[100,96,89,77,64,55,49],sat:[100,94,84,70,56,46,40],usDiv:[100,97,91,80,68,60,54],intl:[100,95,84,68,55,47,43],bonds:[100,101,103,104,105,106,107],real:[100,92,80,62,48,38,33]},
+    note:"Eighteen months of relentless decline. Bonds were the only thing standing — this is the scenario that justifies owning them at all."},
+  covid:{name:"2020 COVID crash",labels:["Jan '20","Feb","Mar","Apr","May","Jun","Jul","Aug '20"],
+    spx:[100,92,66,74,78,82,87,93],
+    paths:{usCore:[100,92,66,74,78,82,87,93],sat:[100,94,70,80,88,95,103,112],usDiv:[100,90,62,68,71,74,78,82],intl:[100,91,64,70,73,76,79,83],bonds:[100,101,100,103,104,104,105,105],real:[100,90,58,66,68,70,72,74]},
+    note:"Fastest 34% drop in history, fastest recovery too. Tech actually finished up — which taught a generation exactly the wrong lesson."},
+  rates:{name:"2022 rate shock",labels:["Jan '22","Mar","May","Jul","Sep","Nov","Jan '23"],
+    spx:[100,95,86,80,76,72,81],
+    paths:{usCore:[100,95,86,80,76,72,81],sat:[100,88,76,70,64,60,68],usDiv:[100,99,96,94,92,90,96],intl:[100,94,87,82,76,74,84],bonds:[100,94,90,88,85,84,87],real:[100,96,88,82,74,72,78]},
+    note:"The year the seatbelt failed: bonds fell alongside stocks. Only dividend/value held its ground. Diversification is a seatbelt, not an airbag."}
+};
+let stressChart=null;
+function runStress(key){
+  document.querySelectorAll(".stress-chip").forEach(b=>b.classList.toggle("on",b.dataset.s===key));
+  const S=STRESS[key];
+  const{h,label}=deskHoldings();
+  const total=h.reduce((s,x)=>s+x.amt,0);
+  const bw={};h.forEach(x=>{bw[planBucket(x)]=(bw[planBucket(x)]||0)+x.amt/total;});
+  const n=S.spx.length;
+  const port=Array.from({length:n},(_,i)=>{
+    let v=0;for(const[b,w]of Object.entries(bw))v+=w*(S.paths[b]?S.paths[b][i]:S.spx[i]);
+    return Math.round(v*10)/10;
+  });
+  const troughP=Math.min(...port)-100,troughS=Math.min(...S.spx)-100;
+  document.getElementById("stressSub").textContent=`Replaying ${S.name} against ${label}.`;
+  if(stressChart)stressChart.destroy();
+  stressChart=new Chart(document.getElementById("stressChart"),{
+    type:"line",
+    data:{labels:S.labels,datasets:[
+      {label:"Your portfolio",data:port,borderColor:"#1e6f50",backgroundColor:"rgba(30,111,80,.07)",fill:true,tension:0,pointRadius:3,borderWidth:2.5},
+      {label:"S&P 500",data:S.spx,borderColor:"#b3382c",borderDash:[5,4],tension:0,pointRadius:3,borderWidth:2}]},
+    options:{plugins:{legend:{position:"bottom",labels:{color:"#4a443a",font:{size:11},boxWidth:12}}},
+      scales:{y:{grid:{color:"#efe9de"},ticks:{color:"#4a443a",font:{family:"Menlo",size:10},callback:v=>v+""}},x:{grid:{display:false},ticks:{color:"#4a443a",font:{size:10}}}}}
+  });
+  const better=troughP>troughS;
+  document.getElementById("stressOut").innerHTML=
+    `Worst point: your portfolio <b class="${better?"delta-up":"delta-dn"}">${troughP.toFixed(0)}%</b> vs S&amp;P 500 <b>${troughS.toFixed(0)}%</b>. ${better?`Your mix would have spared you <b>${(troughP-troughS).toFixed(0)} points</b> of drawdown at the bottom — the difference between wincing and panic-selling.`:`Your mix would have fallen <b>${(troughS-troughP).toFixed(0)} points further</b> than the plain index. Concentration works until it doesn't.`}<br><span style="color:var(--ink2)">${S.note}</span>`;
+}
+function allocateNewMoney(){
+  const amt=parseFloat(document.getElementById("nmAmt").value);
+  if(!amt||amt<=0){alert("Enter a contribution amount.");return;}
+  const{h,label}=deskHoldings();
+  const tgt=PLAN_TARGETS[planProfile];
+  const total=h.reduce((s,x)=>s+x.amt,0);
+  const bw={};h.forEach(x=>{bw[planBucket(x)]=(bw[planBucket(x)]||0)+x.amt/total*100;});
+  const gaps={};let gapSum=0;
+  Object.keys(tgt).forEach(b=>{if(b==="sat")return;const g=Math.max(0,tgt[b]-(bw[b]||0));if(g>0.5){gaps[b]=g;gapSum+=g;}});
+  let rows="";
+  if(gapSum<1){
+    Object.keys(tgt).filter(b=>b!=="sat"&&tgt[b]>0).forEach(b=>{
+      const d=amt*tgt[b]/(100-tgt.sat);
+      rows+=`<tr><td><b style="color:var(--green)">BUY</b></td><td><b class="mono">${PLAN_BUY[b]}</b></td><td class="num">$${Math.round(d).toLocaleString()}</td><td style="font-size:13px;color:var(--ink2)">${PLAN_LABEL[b]} — on target, maintain proportions</td></tr>`;
+    });
+  }else{
+    Object.entries(gaps).sort((a,b)=>b[1]-a[1]).forEach(([b,g])=>{
+      const d=amt*g/gapSum;
+      rows+=`<tr><td><b style="color:var(--green)">BUY</b></td><td><b class="mono">${PLAN_BUY[b]}</b></td><td class="num">$${Math.round(d).toLocaleString()}</td><td style="font-size:13px;color:var(--ink2)">${PLAN_LABEL[b]}: ${(bw[b]||0).toFixed(0)}% held vs ${tgt[b]}% target</td></tr>`;
+    });
+  }
+  document.getElementById("nmOut").innerHTML=
+    `<table><thead><tr><th></th><th>Ticker</th><th>Amount</th><th>Why</th></tr></thead><tbody>${rows}</tbody></table>
+     <div class="footnote" style="margin-top:10px">Based on ${label}, ${planProfile} targets. No sells, no taxes — the contribution does the rebalancing.</div>`;
+  document.getElementById("nmOut").classList.remove("hidden");
+}
+function auditAdvisor(){
+  const txt=document.getElementById("advText").value;
+  const entries=[];
+  txt.split(/\n+/).forEach(line=>{
+    const m=line.match(/^\s*"?([A-Za-z][A-Za-z.]{0,6})"?[\s,;\t]+\$?\s*([\d,]+(?:\.\d+)?)/);
+    if(m){const e=classifyTicker(m[1].toUpperCase());e.amt=parseFloat(m[2].replace(/,/g,""));if(e.amt>0)entries.push(e);}
+  });
+  if(entries.length===0){alert("Paste the proposal — one holding per line, like “JEPI, 25”.");return;}
+  const P=computePortfolio(entries.map(e=>({...e})));
+  const B=computePortfolio([{t:"VTI",amt:60,type:"etf"},{t:"VXUS",amt:25,type:"etf"},{t:"BND",amt:15,type:"etf"}]);
+  const fundFees=Math.round(P.feeW*1000),aumFee=1000;
+  const badOv=P.overlaps.filter(o=>o.pct>70);
+  const worse=P.score<B.score;
+  document.getElementById("advOut").innerHTML=
+    `<div class="whatif-result" style="margin-top:0">
+      Their proposal: score <b style="color:${P.score>=70?"var(--green)":P.score>=45?"var(--ochre)":"var(--red)"}">${P.score}/100</b>, fund fees <b>${P.feeW.toFixed(2)}%</b>.<br>
+      A boring three-fund portfolio: score <b style="color:var(--green)">${B.score}/100</b>, fund fees <b>${B.feeW.toFixed(2)}%</b>.<br>
+      ${badOv.length?`Overlap flags: ${badOv.map(o=>`${o.a} &harr; ${o.b} ~${o.pct}%`).join(", ")}.<br>`:""}
+      On $100k with a typical 1% AUM fee: <b>$${(aumFee+fundFees).toLocaleString()}/yr</b> all-in vs <b>$${Math.round(B.feeW*1000)}/yr</b> doing it yourself.<br>
+      <span class="serif" style="font-style:italic">"${worse?"You'd be paying "+Math.round((aumFee+fundFees)/Math.max(1,Math.round(B.feeW*1000)))+"× the cost for a less diversified portfolio. Ask them to justify every holding that overlaps.":"The allocation itself is reasonable — the question is whether the relationship is worth ~$"+aumFee.toLocaleString()+" a year. Some advisors are. Most index funds aren't asking."}"</span>
+    </div>
+    <div class="footnote" style="margin-top:8px">Not advice — ammunition for the meeting. A fiduciary won't mind the questions; a salesman will.</div>`;
+  document.getElementById("advOut").classList.remove("hidden");
+}
+
+/* ============ COMPARE ============ */
+(function(){
+  const opts=Object.keys(ETFS).sort().map(t=>`<option value="${t}">${t} — ${ETFS[t].n}</option>`).join("");
+  document.getElementById("cmpA").innerHTML=opts;
+  document.getElementById("cmpB").innerHTML=opts;
+  document.getElementById("cmpA").value="VOO";
+  document.getElementById("cmpB").value="SPY";
+  const pairs=[["VOO","SPY"],["VOO","VTI"],["QQQ","QQQM"],["SCHD","VIG"],["QQQ","VUG"],["VTI","VT"],["VXUS","VEA"],["XLK","SMH"],["VOO","JEPI"],["BND","AGG"]];
+  document.getElementById("matchups").innerHTML=pairs.map(([a,b])=>`<button class="chip" onclick="quickCompare('${a}','${b}')">${a} vs ${b}</button>`).join("");
+})();
+function quickCompare(a,b){
+  document.getElementById("cmpA").value=a;
+  document.getElementById("cmpB").value=b;
+  runCompare();
+}
+function runCompare(){
+  const a=document.getElementById("cmpA").value,b=document.getElementById("cmpB").value;
+  if(a===b){alert("Pick two different funds.");return;}
+  const A=ETFS[a],B=ETFS[b];
+  const pct=overlapPct(a,b);
+  const hi=pct>70,med=pct>40&&pct<=70;
+  const col=hi?"var(--red)":med?"var(--ochre)":"var(--green)";
+  const cheaper=A.er<B.er?a:B.er<A.er?b:null;
+
+  // plates
+  const plate=(t,F,isCheaper)=>`
+    <div class="pt">${t}</div>
+    <div class="pn">${F.n}</div>
+    <div class="pmeta">
+      <span>Fee<b style="${isCheaper?'color:var(--green)':''}">${F.er.toFixed(2)}%${isCheaper?" ✓":""}</b></span>
+      <span>Category<b style="font-family:-apple-system,sans-serif;font-size:12.5px;font-weight:600">${F.cls}</b></span>
+    </div>`;
+  document.getElementById("plateA").innerHTML=plate(a,A,cheaper===a);
+  document.getElementById("plateB").innerHTML=plate(b,B,cheaper===b);
+
+  // venn: offset shrinks as overlap grows
+  const offset=12+(100-pct)*0.58; // 12px (near-identical) to 70px (disjoint)
+  document.getElementById("venn").innerHTML=`
+    <span class="tick" style="left:8px;color:var(--green)">${a}</span>
+    <span class="tick" style="right:8px;color:var(--ochre)">${b}</span>
+    <div class="c ca" style="left:${170-75-offset}px"></div>
+    <div class="c cb" style="left:${170-75+offset}px"></div>
+    <div class="vlab" style="color:${col}">~${pct}%<small>shared, by weight</small></div>`;
+
+  const stamp=document.getElementById("cmpStamp");
+  stamp.textContent=hi?"Redundant":med?"Overlapping":"Complementary";
+  stamp.style.color=col;
+  const verdict=hi?`These are ~${pct}% the same fund. Owning both is paying two managers for one portfolio — keep the cheaper one.`:
+    med?`~${pct}% overlap. Related, but each brings something the other doesn't. Defensible to own both if the roles are deliberate.`:
+    `Only ~${pct}% overlap. These genuinely diversify each other.`;
+  document.getElementById("cmpVerdict").textContent="“"+verdict+"”";
+
+  const diff=Math.abs(A.er-B.er);
+  if(diff>0.001){
+    const drag=Math.round(diff/0.06*18000/1000)*1000;
+    const exp=A.er>B.er?a:b,chp=A.er>B.er?b:a;
+    document.getElementById("cmpFee30").innerHTML=`Fee math: investing $500/month for 30 years at 7%, choosing ${exp} over ${chp} costs roughly <b>$${drag.toLocaleString()}</b> in fee drag${pct>85?" — for the same holdings":""}.`;
+  }else{
+    document.getElementById("cmpFee30").textContent="Fees are effectively identical — pick on other merits.";
+  }
+
+  // butterfly sector chart
+  const allSecs=[...new Set([...Object.keys(A.sw),...Object.keys(B.sw)])];
+  const totA=Object.values(A.sw).reduce((x,y)=>x+y,0),totB=Object.values(B.sw).reduce((x,y)=>x+y,0);
+  let rows="";
+  allSecs.sort((x,y)=>((B.sw[y]||0)+(A.sw[y]||0))-((B.sw[x]||0)+(A.sw[x]||0))).forEach(s=>{
+    const wa=(A.sw[s]||0)/totA*100,wb=(B.sw[s]||0)/totB*100;
+    rows+=`<div class="bf-row">
+      <span class="num bf-pl">${wa.toFixed(0)}%</span>
+      <div class="bf-l"><i style="width:${wa}%"></i></div>
+      <span class="bf-lab">${s}</span>
+      <div class="bf-r"><i style="width:${wb}%"></i></div>
+      <span class="num">${wb.toFixed(0)}%</span></div>`;
+  });
+  document.getElementById("cmpBars").innerHTML=`<div class="bf-head"><span style="text-align:right;color:var(--green)">${a}</span><span></span><span style="color:var(--ochre)">${b}</span></div>`+rows;
+  document.getElementById("cmpResults").classList.remove("hidden");
+  document.getElementById("cmpResults").scrollIntoView({behavior:"smooth"});
+}
+
+/* ============ PULSE (simulated) ============ */
+const PULSE=[
+  {t:"SMCI",n:"Supermicro",vol:4.2,chat:88,trend:[20,22,25,24,30,42,66,100],note:"Crowd favorite after earnings surprise. If it's also 15% of your portfolio, that's not conviction, it's exposure."},
+  {t:"PLTR",n:"Palantir",vol:3.1,chat:92,trend:[40,45,50,58,60,70,85,95],note:"Highest chatter on the board. Retail-heavy ownership tends to amplify both directions."},
+  {t:"HOOD",n:"Robinhood",vol:2.8,chat:71,trend:[30,28,35,33,40,55,70,82],note:"Volume spike on product news. Watch for follow-through."},
+  {t:"OXY",n:"Occidental",vol:2.3,chat:34,trend:[25,26,24,28,30,38,52,64],note:"Quietly elevated volume, low chatter — often the more interesting combination."},
+  {t:"NVDA",n:"NVIDIA",vol:2.1,chat:85,trend:[60,62,65,60,66,70,72,78],note:"Perpetually crowded. The most commonly duplicated holding we see: direct + VOO + QQQ + XLK."},
+  {t:"TSLA",n:"Tesla",vol:1.9,chat:79,trend:[55,50,60,48,58,52,65,70],note:"Chatter outrunning volume. Sentiment-driven weeks tend to be choppy."},
+  {t:"SOFI",n:"SoFi",vol:1.8,chat:66,trend:[20,24,28,30,34,40,48,55],note:"Steady retail accumulation pattern."},
+  {t:"INTC",n:"Intel",vol:1.6,chat:41,trend:[35,32,30,33,36,40,44,50],note:"Contrarian corner: rising volume, muted chatter."}
+];
+function sparkline(arr,color){
+  const w=64,h=18,max=Math.max(...arr),min=Math.min(...arr);
+  const pts=arr.map((v,i)=>`${(i/(arr.length-1)*w).toFixed(1)},${(h-2-(v-min)/(max-min||1)*(h-4)).toFixed(1)}`).join(" ");
+  return `<svg width="${w}" height="${h}" style="vertical-align:middle"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+}
+let pulseSort={k:"vol",dir:-1};
+function renderPulse(){
+  const held=new Set();
+  if(lastHoldings)lastHoldings.forEach(h=>{held.add(h.t);if(ETFS[h.t])Object.keys(ETFS[h.t].h||{}).forEach(k=>held.add(k));});
+  const rows=[...PULSE].sort((a,b)=>(a[pulseSort.k]-b[pulseSort.k])*pulseSort.dir);
+  document.getElementById("pulseRows").innerHTML=rows.map(r=>{
+    const heat=r.vol>2.5?"rgba(179,56,44,.09)":r.vol>2?"rgba(176,125,42,.09)":"transparent";
+    const rising=r.trend[7]>r.trend[0];
+    const mine=held.has(r.t)?`<br><span class="atag" style="color:var(--red);font-size:9px">You hold this</span>`:"";
+    return `<tr class="clickrow" onclick="location.hash='#/stock/${r.t}'" title="Open ${r.t} detail"><td><b class="mono">${r.t}</b>${mine}</td><td>${r.n}</td>
+    <td><span class="vol-cell num ${r.vol>2.5?"hot":r.vol>2?"up":""}" style="background:${heat}">${r.vol.toFixed(1)}×</span></td>
+    <td>${sparkline(r.trend,rising?"#1e6f50":"#b3382c")}</td>
+    <td><span class="chatter"><i style="width:${r.chat}%;background:${r.chat>80?"var(--red)":"var(--green)"}"></i></span> <span class="num" style="font-size:12px">${r.chat}</span></td>
+    <td style="font-size:13px;color:var(--ink2)">${r.note}</td></tr>`;
+  }).join("");
+  document.querySelectorAll("th.sortable").forEach(th=>{
+    th.classList.remove("sorted-asc","sorted-desc");
+    if(th.dataset.k===pulseSort.k)th.classList.add(pulseSort.dir===-1?"sorted-desc":"sorted-asc");
+  });
+}
+document.addEventListener("click",e=>{
+  const th=e.target.closest("th.sortable");
+  if(th){
+    if(pulseSort.k===th.dataset.k)pulseSort.dir*=-1;
+    else{pulseSort.k=th.dataset.k;pulseSort.dir=-1;}
+    renderPulse();
+  }
+  const a=e.target.closest("[data-article]");
+  if(a){e.preventDefault();showArticle(a.dataset.article);}
+  if(e.target.id==="backToList"){e.preventDefault();
+    document.getElementById("articleView").classList.add("hidden");
+    document.getElementById("articleList").classList.remove("hidden");window.scrollTo(0,0);}
+});
+renderPulse();
+
+/* ============ LEADERBOARDS (simulated community data) ============ */
+const COMMUNITY=[
+  {h:"u/threefund_theo",port:"VTI 50 · VXUS 30 · BND 20",score:91,ytd:8.2,hold:11.4,fee:0.04,imp:2,topPos:50,votes:412,badges:["Boglehead","Fee Hawk"],shame:""},
+  {h:"u/coastfire_carla",port:"VT 70 · BND 20 · GLD 10",score:88,ytd:7.4,hold:8.9,fee:0.08,imp:5,topPos:70,votes:288,badges:["One-Fund Wonder"],shame:""},
+  {h:"u/boglehead_barbara",port:"VOO 45 · VXUS 25 · BND 20 · VNQ 10",score:86,ytd:9.1,hold:14.2,fee:0.05,imp:1,topPos:45,votes:351,badges:["Boglehead","Diamond Hands"],shame:""},
+  {h:"u/dividend_dan",port:"SCHD 40 · VIG 25 · VOO 20 · O 15",score:74,ytd:6.8,hold:9.6,fee:0.06,imp:8,topPos:40,votes:203,badges:["Income Machine"],shame:""},
+  {h:"u/quietcompounder",port:"VOO 30 · SCHD 20 · VXUS 20 · NVDA 8 · BND 22",score:64,ytd:11.3,hold:6.1,fee:0.05,imp:35,topPos:30,votes:467,badges:["Most Improved","Redemption Arc"],shame:""},
+  {h:"u/dca_dave",port:"VTI 60 · QQQM 25 · VXUS 15",score:71,ytd:12.6,hold:7.8,fee:0.06,imp:12,topPos:60,votes:189,badges:["Diamond Hands","Fee Hawk"],shame:""},
+  {h:"u/spreadsheet_sam",port:"VOO 35 · AVGO 15 · SCHD 25 · VEA 25",score:69,ytd:14.2,hold:5.2,fee:0.05,imp:9,topPos:35,votes:154,badges:["Receipts Poster"],shame:""},
+  {h:"u/ladyofleverage",port:"QQQ 40 · VUG 30 · XLK 20 · NVDA 10",score:31,ytd:19.8,hold:4.6,fee:0.13,imp:-4,topPos:40,votes:97,badges:["Diamond Hands"],shame:"QQQ, VUG, and XLK overlap ~60%. One trade, worn as four."},
+  {h:"u/chipsandsalsa",port:"NVDA 45 · SMH 30 · AMD 15 · SMCI 10",score:9,ytd:24.1,hold:3.8,fee:0.14,imp:-11,topPos:45,votes:522,badges:["Sector Bettor"],shame:"100% semiconductors. Not a portfolio — a prayer with a brokerage account."},
+  {h:"u/onlyowns_voo",port:"VOO 100",score:52,ytd:9.0,hold:9.1,fee:0.03,imp:0,topPos:100,votes:266,badges:["One-Fund Wonder","Fee Hawk"],shame:"It's a fine fund. It's also his entire net worth and his emergency fund."},
+  {h:"u/yolo_recovered",port:"VTI 45 · VXUS 25 · BND 15 · SCHD 15",score:83,ytd:8.8,hold:2.4,fee:0.04,imp:58,topPos:45,votes:389,badges:["Most Improved","Redemption Arc"],shame:""},
+  {h:"u/triple_dipper",port:"VOO 35 · SPY 25 · IVV 25 · VTI 15",score:38,ytd:9.4,hold:6.7,fee:0.05,imp:-2,topPos:35,votes:311,badges:[],shame:"Four tickers, one index, ~95% the same fund. The archetype."}
+];
+const BOARDS={
+  div:{title:"Best Diversified",sub:"Highest look-through diversification scores in the community.",metric:"Score",foot:"Score reflects sector spread, single-name caps, asset-class mix, and fund overlap.",
+    rows:()=>[...COMMUNITY].sort((a,b)=>b.score-a.score).slice(0,8),val:e=>`<span style="color:var(--green)">${e.score}</span><span style="font-size:11px;color:var(--ink2)">/100</span>`},
+  gains:{title:"Long-Haul Gains",sub:"Best YTD returns among investors with 3+ year average holding periods. Day traders need not apply.",metric:"YTD (avg hold)",foot:"Verified through broker sync in production. Returns without holding periods are just screenshots.",
+    rows:()=>COMMUNITY.filter(e=>e.hold>=3).sort((a,b)=>b.ytd-a.ytd).slice(0,8),val:e=>`<span style="color:var(--green)">+${e.ytd.toFixed(1)}%</span> <span style="font-size:11px;color:var(--ink2)">(${e.hold.toFixed(1)}y)</span>`},
+  improved:{title:"Most Improved",sub:"Biggest diversification score gains in the last 90 days. Redemption arcs welcome.",metric:"Δ Score (90d)",foot:"u/yolo_recovered came in at 25/100 in March holding 60% meme stocks. Look at them now.",
+    rows:()=>[...COMMUNITY].sort((a,b)=>b.imp-a.imp).slice(0,8),val:e=>`<span style="color:${e.imp>0?"var(--green)":"var(--red)"}">${e.imp>0?"+":""}${e.imp}</span>`},
+  fees:{title:"Fee Hawks",sub:"Lowest weighted expense ratios. Every basis point goes to them, not the fund company.",metric:"Weighted fee",foot:"The spread between the top and bottom of this board compounds to five figures over a career.",
+    rows:()=>[...COMMUNITY].sort((a,b)=>a.fee-b.fee).slice(0,8),val:e=>`<span style="color:var(--green)">${e.fee.toFixed(2)}%</span>`},
+  shame:{title:"Hall of Shame",sub:"Celebrated for their courage, ranked by their concentration. All in good fun — they opted in.",metric:"Score",foot:"Every one of these portfolios beat the market at some point. That's what makes them dangerous.",
+    rows:()=>COMMUNITY.filter(e=>e.shame).sort((a,b)=>a.score-b.score),val:e=>`<span style="color:var(--red)">${e.score}</span><span style="font-size:11px;color:var(--ink2)">/100</span>`}
+};
+let curBoard="div";
+const votedSet=new Set();
+function renderBoards(){
+  document.getElementById("lbTabs").innerHTML=Object.entries(BOARDS).map(([k,b])=>
+    `<button class="lb-tab ${k===curBoard?"on":""}" onclick="setBoard('${k}')">${b.title}</button>`).join("");
+  const B=BOARDS[curBoard];
+  document.getElementById("lbTitle").textContent=B.title;
+  document.getElementById("lbSub").textContent=B.sub;
+  document.getElementById("lbMetricHead").textContent=B.metric;
+  document.getElementById("lbFoot").textContent=B.foot;
+  document.getElementById("lbRows").innerHTML=B.rows().map((e,i)=>{
+    const idx=COMMUNITY.indexOf(e);
+    const shameNote=curBoard==="shame"?`<div class="footnote" style="margin-top:4px;font-style:italic">"${e.shame}"</div>`:"";
+    return `<tr>
+      <td class="lb-rank ${i===0?"gold":""}">${i+1}${i===0?"st":i===1?"nd":i===2?"rd":"th"}</td>
+      <td class="lb-handle">${e.h}</td>
+      <td><span class="lb-holdings">${e.port}</span>${shameNote}</td>
+      <td class="lb-metric">${B.val(e)}</td>
+      <td>${e.badges.map(b=>`<span class="badge">${b}</span>`).join("")||'<span class="footnote">—</span>'}</td>
+      <td><button class="vote-btn ${votedSet.has(idx)?"voted":""}" onclick="voteFor(${idx})">&#9650; ${e.votes}</button></td>
+    </tr>`;
+  }).join("");
+}
+function setBoard(k){curBoard=k;renderBoards();}
+function renderYourRank(){
+  const el=document.getElementById("yourRank");
+  if(!el)return;
+  if(!lastResult){el.innerHTML=`<b>Where would you land?</b> Run <a href="#/analyzer">the Analyzer</a> and we'll place your score on these boards.`;return;}
+  const mine=lastResult.score;
+  const sorted=[...COMMUNITY].sort((a,b)=>b.score-a.score);
+  const rank=sorted.filter(e=>e.score>mine).length+1;
+  const above=sorted[rank-2],below=sorted[rank-1];
+  const neighbor=above?`just behind <b class="mono">${above.h}</b> (${above.score})`:`ahead of everyone — <b class="mono">${sorted[0].h}</b> has been dethroned`;
+  el.innerHTML=`<b>Your latest analysis: ${mine}/100.</b> That would place you <b>#${rank} of ${COMMUNITY.length+1}</b> on Best Diversified, ${neighbor}${below&&below.score<=mine?`, ahead of <b class="mono">${below.h}</b> (${below.score})`:""}. Opt in to defend it.`;
+}
+function voteFor(idx){
+  if(votedSet.has(idx))return;
+  votedSet.add(idx);COMMUNITY[idx].votes++;
+  renderBoards();
+}
+/* ---- guess the score game ---- */
+const GAME=[
+  {port:"AAPL 25 · TSLA 20 · NVDA 20 · VOO 20 · QQQ 15",score:23,note:"The classic Reddit special. 59% look-through tech, NVDA hiding in both funds."},
+  {port:"VOO 40 · SPY 30 · VTI 30",score:44,note:"Three tickers, ~95% one index. Diversified across fund companies, not stocks."},
+  {port:"VTI 40 · VXUS 20 · BND 20 · SCHD 10 · VNQ 10",score:87,note:"Four asset classes, no overlap flags, 0.04% blended fee. This is what boring excellence looks like."},
+  {port:"NVDA 60 · SMH 25 · AMD 15",score:6,note:"One sector, one thesis, one very exciting brokerage statement. In both directions."}
+];
+let gameIdx=0;
+function renderGame(){
+  document.getElementById("gameHoldings").textContent=GAME[gameIdx].port;
+  document.getElementById("gameReveal").classList.add("hidden");
+  document.getElementById("gameSlider").value=50;
+  document.getElementById("gameGuess").textContent="50";
+}
+function revealScore(){
+  const g=GAME[gameIdx];
+  const guess=+document.getElementById("gameSlider").value;
+  const diff=Math.abs(guess-g.score);
+  const react=diff<=5?"Dead on. You've been reading fund prospectuses for fun, haven't you.":diff<=15?"Close — you've got the instinct.":diff<=30?"Not quite. The look-through math is sneakier than it looks.":"Way off — which is exactly why this tool exists.";
+  const el=document.getElementById("gameReveal");
+  el.innerHTML=`Actual score: <b class="serif" style="font-size:26px;color:${g.score>=70?"var(--green)":g.score>=45?"var(--ochre)":"var(--red)"}">${g.score}/100</b> — you guessed ${guess} (off by ${diff}).<br>
+  <span style="color:var(--ink2)">${g.note}</span><br>
+  <span class="serif" style="font-style:italic">"${react}"</span><br>
+  <button class="chip" style="margin-top:10px" onclick="gameIdx=(gameIdx+1)%GAME.length;renderGame()">Next portfolio &rarr;</button>`;
+  el.classList.remove("hidden");
+}
+renderBoards();renderGame();renderYourRank();
+
+/* ============ STOCK DETAIL PAGE ============ */
+let currentStock=null;
+function stkExposureOf(tk){
+  if(!lastHoldings)return null;
+  let direct=0,inside=[];
+  const total=lastHoldings.reduce((s,h)=>s+h.amt,0);
+  lastHoldings.forEach(h=>{
+    if(h.t===tk)direct+=h.amt/total*100;
+    else if(ETFS[h.t]&&ETFS[h.t].h&&ETFS[h.t].h[tk])inside.push([h.t,h.amt/total*100*ETFS[h.t].h[tk]/100]);
+  });
+  const viaFunds=inside.reduce((s,[,w])=>s+w,0);
+  return{direct,inside,totalPct:direct+viaFunds};
+}
+async function renderStockPage(tk){
+  tk=(tk||"").toUpperCase();
+  if(!tk){location.hash="#/pulse";return;}
+  currentStock=tk;
+  const known=STOCKS[tk]||ETFS[tk];
+  const pr=PULSE.find(r=>r.t===tk);
+  // immediate skeleton from built-in data
+  document.getElementById("stkHead").innerHTML=
+    `<div><div class="stk-tk">${tk}</div><div class="stk-name">${known?known.n:"Looking up…"}</div></div>
+     <div class="stk-price" id="stkPrice"><span class="footnote">fetching live quote…</span></div>`;
+  document.getElementById("stkStats").innerHTML=
+    `<div class="stat-cell"><div class="sk">Type</div><div class="sv" style="font-family:-apple-system,sans-serif;font-size:15px">${ETFS[tk]?ETFS[tk].cls+" fund":STOCKS[tk]?STOCKS[tk].s:"—"}</div></div>
+     ${ETFS[tk]?`<div class="stat-cell"><div class="sk">Expense ratio</div><div class="sv">${ETFS[tk].er.toFixed(2)}%</div></div>`:""}
+     ${pr?`<div class="stat-cell"><div class="sk">Volume vs 30-day</div><div class="sv" style="color:${pr.vol>2.5?"var(--red)":"var(--green)"}">${pr.vol.toFixed(1)}×</div></div>
+     <div class="stat-cell"><div class="sk">Retail chatter</div><div class="sv">${pr.chat}<span style="font-size:12px;color:var(--ink2)">/100</span></div></div>`:""}
+     <div class="stat-cell" id="stkCap"><div class="sk">Market cap</div><div class="sv"><span class="footnote">…</span></div></div>`;
+  // crowd read
+  const crowd=document.getElementById("stkCrowd");
+  if(pr){
+    const rising=pr.trend[7]>pr.trend[0];
+    crowd.innerHTML=`<div style="margin-bottom:10px">8-week attention trend: ${sparkline(pr.trend.map(x=>x*2),rising?"#1e6f50":"#b3382c")}</div>
+      <div style="margin-bottom:10px">Chatter <span class="chatter" style="width:110px"><i style="width:${pr.chat}%;background:${pr.chat>80?"var(--red)":"var(--green)"}"></i></span> <b class="num">${pr.chat}/100</b> · Volume <b class="num">${pr.vol.toFixed(1)}×</b> normal</div>
+      <div class="finding ${pr.chat>80&&pr.vol>2.5?"f-red":pr.chat>60||pr.vol>2?"f-amber":"f-ok"}"><span class="tag">Read</span>${pr.note}</div>
+      <div class="footnote" style="margin-top:8px">Volume & chatter are simulated in this preview; live feeds land with the data pipeline.</div>`;
+  }else{
+    crowd.innerHTML=`<div class="footnote">${tk} isn't on this week's unusual-activity list — no elevated volume or chatter detected. Quiet is usually good.</div>`;
+  }
+  // exposure
+  const exp=document.getElementById("stkExposure");
+  const e=stkExposureOf(tk);
+  if(!e){exp.innerHTML=`<div class="footnote">Run <a href="#/analyzer">the Analyzer</a> first and this box shows exactly how much ${tk} you really own — direct and through your funds.</div>`;}
+  else if(e.totalPct<0.1){exp.innerHTML=`<div class="finding f-ok"><span class="tag">Clear</span>Your analyzed portfolio has no meaningful ${tk} exposure.</div>`;}
+  else{
+    exp.innerHTML=`<div class="fee-big" style="color:${e.totalPct>10?"var(--red)":e.totalPct>5?"var(--ochre)":"var(--green)"}">${e.totalPct.toFixed(1)}%</div>
+      <div class="footnote" style="margin-bottom:8px">of your portfolio, all sources combined</div>
+      ${e.direct>0?`<div style="font-size:13.5px">Direct: <b class="num">${e.direct.toFixed(1)}%</b></div>`:""}
+      ${e.inside.map(([f,w])=>`<div style="font-size:13.5px">Inside <b class="mono">${f}</b>: <span class="num">${w.toFixed(1)}%</span></div>`).join("")}`;
+  }
+  // live API: profile + quote + news
+  const key=getApiKey();
+  const newsEl=document.getElementById("stkNews");
+  if(!key){
+    document.getElementById("stkPrice").innerHTML=`<span class="footnote">live quote needs an API key</span>`;
+    newsEl.innerHTML=`<div class="footnote">Add a Finnhub key in the Analyzer's live-data settings to see news here.</div>`;
+    return;
+  }
+  try{
+    const to=new Date(),from=new Date(Date.now()-14*86400000);
+    const fmt=d=>d.toISOString().slice(0,10);
+    const [quote,profile,news]=await Promise.all([
+      fetch(`https://finnhub.io/api/v1/quote?symbol=${tk}&token=${key}`).then(r=>r.json()).catch(()=>null),
+      fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${tk}&token=${key}`).then(r=>r.json()).catch(()=>null),
+      fetch(`https://finnhub.io/api/v1/company-news?symbol=${tk}&from=${fmt(from)}&to=${fmt(to)}&token=${key}`).then(r=>r.json()).catch(()=>null)
+    ]);
+    if(currentStock!==tk)return; // user navigated away
+    if(quote&&quote.c>0){
+      const up=(quote.dp||0)>=0;
+      document.getElementById("stkPrice").innerHTML=
+        `$${quote.c.toFixed(2)}<small class="${up?"up":"hot"}">${up?"▲":"▼"} ${Math.abs(quote.dp||0).toFixed(2)}% today</small>`;
+    }else{
+      document.getElementById("stkPrice").innerHTML=`<span class="footnote">no live quote</span>`;
+    }
+    if(profile&&profile.name){
+      document.querySelector("#stkHead .stk-name").textContent=profile.name+(profile.finnhubIndustry?" · "+profile.finnhubIndustry:"");
+      if(profile.marketCapitalization)document.getElementById("stkCap").innerHTML=
+        `<div class="sk">Market cap</div><div class="sv">$${profile.marketCapitalization>=1e6?(profile.marketCapitalization/1e6).toFixed(2)+"T":profile.marketCapitalization>=1000?(profile.marketCapitalization/1000).toFixed(0)+"B":Math.round(profile.marketCapitalization)+"M"}</div>`;
+    }
+    if(Array.isArray(news)&&news.length){
+      newsEl.innerHTML=news.slice(0,6).map(n=>
+        `<div class="news-item"><a href="${n.url}" target="_blank" rel="noopener">${n.headline}</a>
+         <div class="news-meta">${n.source||""} · ${new Date(n.datetime*1000).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</div></div>`).join("");
+    }else{
+      newsEl.innerHTML=`<div class="footnote">No news in the last two weeks — which, around here, we consider bullish for your attention span.</div>`;
+    }
+  }catch(err){
+    if(currentStock===tk)newsEl.innerHTML=`<div class="footnote">Live data unavailable right now — showing built-in info only.</div>`;
+  }
+}
+
+/* ============ ARTICLES ============ */
+const ARTICLES={
+  a4:{h:"Portfolio of the Week: u/quietcompounder was 61% tech and had no idea",d:"June 29, 2026",body:`
+    <p><em>Every week we publicly dissect one submitted portfolio — anonymized, with permission. Want yours next? There's a submit button at the bottom of Field Notes.</em></p>
+    <p>This week's patient: twelve holdings spread across four brokerages, tracked in a genuinely impressive color-coded spreadsheet. The submitter described themselves as "pretty diversified, just want a second opinion."</p>
+    <h3>The intake</h3>
+    <div class="figure">
+      <b>As submitted (consolidated):</b><br><br>
+      <span class="num">AAPL 14% · NVDA 12% · MSFT 9% · AMD 5% · QQQ 18% · VUG 12% · XLK 8% · VOO 10% · SPY 4% · TSLA 4% · SOFI 2% · cash 2%</span>
+    </div>
+    <p>Twelve line items. Four brokerages. One bet.</p>
+    <h3>What the X-ray showed</h3>
+    <p>Look-through technology exposure: <b>61%</b>. The QQQ, VUG, and XLK positions are roughly half megacap tech themselves, and they re-buy the same Apple, Nvidia, and Microsoft the submitter already owns directly. True Nvidia position: 12% direct plus 4.1% hiding inside the funds — <b>16.1%</b> in one company. Score: <b>29/100, grade F</b>.</p>
+    <p>Also: VOO and SPY, side by side, ~99% identical. The classic. And the QQQ/VUG pair overlaps ~70% — that's three-quarters of a QQQ, bought twice.</p>
+    <h3>The prescription</h3>
+    <p>Three trades, all inside tax-advantaged accounts so nothing triggered taxes: consolidate VOO + SPY into VOO; swap XLK for VXUS (the portfolio had zero international); trim NVDA direct to 8% and put the proceeds in SCHD for a value/dividend counterweight.</p>
+    <h3>The outcome</h3>
+    <div class="figure">
+      Score <b style="color:var(--red)">29</b> &rarr; <b style="color:var(--green)">64</b> · Tech exposure 61% &rarr; 36% · Weighted fee 0.11% &rarr; 0.05%<br><br>
+      Fee savings alone: roughly <b>$61,000</b> over 25 years of planned contributions, per the compounding math in <a href="#" data-article="a3">our fee essay</a>.
+    </div>
+    <p>The submitter's reaction, verbatim: "I genuinely thought the spreadsheet meant I was being careful." The spreadsheet was careful. The portfolio was one trade.</p>
+    <p><a href="#/analyzer">Run your own X-ray</a> — takes eight seconds, and nobody has to watch.</p>`},
+  a1:{h:"VOO, SPY, and IVV walk into a portfolio. They are the same fund.",d:"June 24, 2026",body:`
+    <p>Every week we see portfolios holding two — sometimes all three — of VOO, SPY, and IVV. Different tickers, different fund companies, identical job: track the S&amp;P 500. The holdings overlap is effectively 99%.</p>
+    <p>Owning two of them isn't diversification. It's paying two fund managers to buy you the same 500 companies in the same proportions.</p>
+    <h3>The only difference that matters</h3>
+    <div class="figure">
+      <b>The same index, three prices</b><br><br>
+      SPLG &nbsp;<span class="num">0.02%</span> &nbsp;·&nbsp; VOO &nbsp;<span class="num">0.03%</span> &nbsp;·&nbsp; IVV &nbsp;<span class="num">0.03%</span> &nbsp;·&nbsp; SPY &nbsp;<span class="num">0.09%</span>
+    </div>
+    <p>SPY charges roughly three times what VOO does. Its defenders point to liquidity and options markets — real advantages if you're trading blocks or writing covered calls. If you're buying and holding for twenty years, you're paying a liquidity premium for liquidity you'll never use.</p>
+    <h3>What to do about it</h3>
+    <p>Pick one. In a tax-advantaged account (401k, IRA), consolidating is free — sell the expensive twin, buy the cheap one, done. In a taxable account, check your unrealized gains first; sometimes the right move is simply pointing all <em>new</em> money at the cheaper fund and letting the old position sit.</p>
+    <p>Run your own holdings through <a href="#/analyzer">the Analyzer</a> — redundant index funds are the single most common flag we raise.</p>`},
+  a2:{h:"Your “diversified” tech portfolio is one trade",d:"June 17, 2026",body:`
+    <p>A portfolio we see constantly: Apple, Nvidia, Microsoft, a slug of QQQ, some XLK for "balance." Five positions. Feels diversified — five decisions, five tickers, five line items on the statement.</p>
+    <p>It's one trade. Large-cap US tech, expressed five ways. The pairwise correlations run north of 0.85, and the ETFs in the mix hold the same three stocks at the top anyway: a dollar in QQQ is about 25 cents of Apple, Microsoft, and Nvidia before you've bought anything else.</p>
+    <h3>Why it matters</h3>
+    <p>Diversification isn't about the number of positions. It's about the number of <em>independent bets</em>. When holdings move together, ten of them protect you no better than one. In the 2022 drawdown, this exact portfolio shape fell roughly a third further than a plain total-market fund.</p>
+    <h3>The test</h3>
+    <p>Ask of every holding: <em>if my biggest position had a terrible year, would this one care?</em> If the honest answer is "it would have the same terrible year," it's not diversifying you — it's leverage with extra steps.</p>
+    <p><a href="#/analyzer">The Analyzer</a> computes your true look-through concentration in seconds. Most people who feel diversified find they're 40%+ one sector.</p>`},
+  a3:{h:"The 0.06% difference that costs $18,000",d:"June 10, 2026",body:`
+    <p>Expense ratios are quoted in a unit designed to be ignored. What's 0.09% versus 0.03%? Six basis points. A rounding error. Nobody cancels a subscription over six basis points.</p>
+    <p>Run it forward instead. $500 a month into an S&amp;P 500 fund for 30 years at 7% annual returns: the 0.06% fee gap compounds to roughly <b>$18,000</b> in lost value. Same index. Same returns before fees. The only difference is which ticker you typed on day one.</p>
+    <h3>Auditing your own funds</h3>
+    <p>Most expensive funds have a cheap twin tracking the same or a nearly identical index: SPY has VOO and SPLG. QQQ has QQQM — same Nasdaq-100, 3 basis points cheaper, run by the same company. IWM has VB. The pattern repeats across the industry because the older, expensive fund keeps its assets through inertia.</p>
+    <h3>Swapping without a tax bill</h3>
+    <p>In retirement accounts, swap freely. In taxable accounts, three options in order of gentleness: point new contributions at the cheap twin; use tax-loss harvesting windows to switch; or accept the gains hit if the fee drag over your remaining horizon exceeds the tax cost — <a href="#/pricing">Pro</a> runs that break-even for you.</p>
+    <p>The <a href="#/analyzer">fee audit</a> in the Analyzer flags every fund you hold that has a cheaper twin.</p>`}
+};
+function showArticle(id){
+  const art=ARTICLES[id];if(!art)return;
+  document.getElementById("articleBody").innerHTML=`<div class="article-date" style="margin-bottom:8px">${art.d}</div><h1 class="serif" style="font-size:34px;margin-bottom:22px">${art.h}</h1>${art.body}`;
+  document.getElementById("articleList").classList.add("hidden");
+  document.getElementById("articleView").classList.remove("hidden");
+  window.scrollTo(0,0);
+}
+
+route();
+</script>
+</body>
+</html>
