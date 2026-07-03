@@ -1,0 +1,24 @@
+name: Refresh ETF data
+on:
+  schedule:
+    - cron: "30 9 * * 1-5"   # 9:30 UTC (~5:30am ET), weekdays
+  workflow_dispatch:          # adds a manual "Run workflow" button
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install yfinance
+      - run: python etf_pipeline.py
+      - name: Commit updated data
+        run: |
+          git config user.name "data-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data.json
+          git diff --cached --quiet || git commit -m "Nightly ETF data refresh"
+          git push
