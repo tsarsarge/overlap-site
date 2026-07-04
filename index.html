@@ -216,6 +216,31 @@
   .bf-r i{position:absolute;left:0;top:0;bottom:0;background:var(--ochre)}
   .bf-pl{text-align:right}
   .cmp-verdict-wrap{text-align:center;padding:6px 0 18px}
+  .bout{border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:14px 22px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+  .bout .bt{font-family:Georgia,serif;font-size:22px;font-weight:700;letter-spacing:-.4px}
+  .bout .bm{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#b8b2a6}
+  .plate .pstats{border-top:1px solid var(--rule);margin-top:14px;padding-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .plate .pstats>div{text-align:center}
+  .plate .pstats .pk2{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:700}
+  .plate .pstats .pv2{font-family:"SF Mono",Menlo,monospace;font-size:14px;font-weight:700;margin-top:2px}
+  .tape-row{display:grid;grid-template-columns:1fr 190px 1fr;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule);font-size:14px}
+  .tape-row:last-child{border-bottom:none}
+  .tape-row .tl{text-align:right;font-family:"SF Mono",Menlo,monospace;font-weight:700}
+  .tape-row .tm{text-align:center;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);font-weight:700}
+  .tape-row .tr2{font-family:"SF Mono",Menlo,monospace;font-weight:700}
+  .wtick{color:var(--green);font-weight:800;margin:0 6px}
+  .anatomy{display:flex;height:30px;border:1.5px solid var(--ink);margin:14px 0 4px;overflow:hidden}
+  .anatomy>div{display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:.04em;white-space:nowrap;overflow:hidden}
+  .an-a{background:rgba(30,111,80,.25)}
+  .an-shared{background:repeating-linear-gradient(45deg,rgba(179,56,44,.35),rgba(179,56,44,.35) 4px,rgba(179,56,44,.15) 4px,rgba(179,56,44,.15) 8px)}
+  .an-b{background:rgba(176,125,42,.3)}
+  .an-cap{display:flex;justify-content:space-between;font-size:11px;color:var(--ink2)}
+  .sh-row{display:grid;grid-template-columns:150px 1fr 52px 1fr 52px;gap:8px;align-items:center;margin-bottom:8px;font-size:12.5px}
+  .sh-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sh-l,.sh-r{height:15px;background:var(--paper2);border:1px solid var(--rule);position:relative}
+  .sh-l i{position:absolute;right:0;top:0;bottom:0;background:var(--green)}
+  .sh-r i{position:absolute;left:0;top:0;bottom:0;background:var(--ochre)}
+  .fig-tag{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);font-weight:700;border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:14px}
 
   /* ---------- pulse ---------- */
   .banner{border:1.5px solid var(--ochre);background:rgba(176,125,42,.07);padding:12px 16px;font-size:13.5px;margin-bottom:24px}
@@ -623,37 +648,52 @@
       <div class="matchups" id="matchups"></div>
     </div>
     <div id="cmpResults" class="hidden">
-      <div class="duel">
+      <div class="bout">
+        <span class="bt" id="boutTitle"></span>
+        <span class="bm" id="boutMeta"></span>
+      </div>
+      <div class="duel" style="margin-bottom:0">
         <div class="plate a" id="plateA"></div>
         <div class="vs">vs.</div>
         <div class="plate b" id="plateB"></div>
       </div>
-      <div class="panel">
-        <h2>Shared holdings</h2>
-        <div class="sub">The shaded intersection is money invested in the same stocks, at the same weights, twice.</div>
-        <div class="venn-wrap">
-          <div class="venn" id="venn"></div>
+      <div class="panel" style="border-top:none">
+        <div class="fig-tag">The tale of the tape · ✓ marks the better number</div>
+        <div id="cmpTape"></div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="fig-tag">Fig. A — Shared anatomy</div>
+          <div class="venn-wrap"><div class="venn" id="venn"></div></div>
+          <div class="anatomy" id="anatomyBar"></div>
+          <div class="an-cap" id="anatomyCap"></div>
+          <div class="cmp-verdict-wrap" style="padding-top:16px">
+            <div class="stamp" id="cmpStamp" style="font-size:22px;margin-bottom:12px">–</div>
+            <div id="cmpVerdict" style="font-family:Georgia,serif;font-style:italic;font-size:16.5px;max-width:520px;margin:0 auto"></div>
+          </div>
         </div>
-        <div class="cmp-verdict-wrap">
-          <div class="stamp" id="cmpStamp" style="font-size:22px;margin-bottom:12px">–</div>
-          <div id="cmpVerdict" style="font-family:Georgia,serif;font-style:italic;font-size:17px;max-width:560px;margin:0 auto"></div>
+        <div class="panel">
+          <div class="fig-tag">Fig. B — What fees do to $10,000 over 30 years (7%/yr before fees)</div>
+          <canvas id="feeChart" height="210"></canvas>
+          <div class="footnote" style="margin-top:12px" id="cmpFee30"></div>
         </div>
-        <div class="footnote" style="text-align:center" id="cmpFee30"></div>
       </div>
       <div class="panel">
         <h2>What exactly overlaps</h2>
-        <div class="sub">The same stocks, held by both funds — this is the money you've doubled up on. Based on each fund's top holdings.</div>
+        <div class="sub">The same stocks, held by both funds — the money you've doubled up on. Based on each fund's top holdings.</div>
         <div id="cmpShared"></div>
       </div>
       <div class="panel">
-        <h2>Sector tilt, side by side</h2>
-        <div class="sub">Bars reach toward the fund that holds more of the sector. Mirror images = redundant funds.</div>
+        <div class="fig-tag">Fig. C — Sector tilt, side by side · mirror images = redundant funds</div>
         <div id="cmpBars"></div>
       </div>
       <div class="panel">
         <h2>How to de-risk this pair</h2>
         <div class="sub">Specific moves, in order of impact. Educational analytics, not personal advice.</div>
         <div id="cmpFix"></div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="share-btn" onclick="downloadMatchup()">&#8681; Download matchup card (share it)</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1126,7 +1166,7 @@ let fundDataDate=null;
 function overlapPct(a,b){
   let p=KNOWN_OVERLAP[a+"|"+b]??KNOWN_OVERLAP[b+"|"+a];
   if(p!==undefined)return p;
-  const swA=ETFS[a].sw,swB=ETFS[b].sw;let s=0;
+  const swA=ETFS[a].sw||{},swB=ETFS[b].sw||{};let s=0;
   const totA=Object.values(swA).reduce((x,y)=>x+y,0),totB=Object.values(swB).reduce((x,y)=>x+y,0);
   for(const k of Object.keys(swA))if(swB[k])s+=Math.min(swA[k]/totA,swB[k]/totB)*100;
   return Math.round(s*0.6);
@@ -1873,6 +1913,18 @@ function quickCompare(a,b){
   document.getElementById("cmpB").value=b;
   runCompare();
 }
+function fundStats(F){
+  const h=F.h||{},vals=Object.values(h);
+  const top10=vals.reduce((s,v)=>s+v,0);
+  const largestT=Object.keys(h).sort((x,y)=>h[y]-h[x])[0]||null;
+  const sw=F.sw||{},tot=Object.values(sw).reduce((x,y)=>x+y,0)||1;
+  const breadth=Object.values(sw).filter(w=>w/tot*100>=1).length;
+  return{top10,largestT,largest:largestT?h[largestT]:0,breadth};
+}
+function feeCost30(er){ // $ lost to fees over 30 yrs on $10k at 7% gross
+  return Math.round(10000*(Math.pow(1.07,30)-Math.pow(1+(7-er)/100,30)));
+}
+let feeChartObj=null,lastMatchup=null;
 function runCompare(){
   const a=document.getElementById("cmpA").value,b=document.getElementById("cmpB").value;
   if(a===b){alert("Pick two different funds.");return;}
@@ -1880,27 +1932,63 @@ function runCompare(){
   const pct=overlapPct(a,b);
   const hi=pct>70,med=pct>40&&pct<=70;
   const col=hi?"var(--red)":med?"var(--ochre)":"var(--green)";
+  const hexCol=hi?"#b3382c":med?"#b07d2a":"#1e6f50";
   const cheaper=A.er<B.er?a:B.er<A.er?b:null;
+  const sA=fundStats(A),sB=fundStats(B);
 
-  // plates
-  const plate=(t,F,isCheaper)=>`
+  // bout header
+  const d=new Date();
+  document.getElementById("boutTitle").textContent=`${a} vs. ${b}`;
+  document.getElementById("boutMeta").textContent=`Bout No. ${100+Math.floor(Math.random()*900)} · ${d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})} · one wallet, two claims on it`;
+
+  // plates with mini-stats
+  const plate=(t,F,S,isCheaper)=>`
     <div class="pt">${t}</div>
     <div class="pn">${F.n}</div>
     <div class="pmeta">
       <span>Fee<b style="${isCheaper?'color:var(--green)':''}">${F.er.toFixed(2)}%${isCheaper?" ✓":""}</b></span>
       <span>Category<b style="font-family:-apple-system,sans-serif;font-size:12.5px;font-weight:600">${F.cls}</b></span>
+    </div>
+    <div class="pstats">
+      <div><div class="pk2">Top 10 weight</div><div class="pv2">${S.top10>0?S.top10.toFixed(0)+"%":"—"}</div></div>
+      <div><div class="pk2">Biggest position</div><div class="pv2">${S.largestT?S.largestT:"—"}</div></div>
+      <div><div class="pk2">Sectors ≥1%</div><div class="pv2">${S.breadth||"—"}</div></div>
     </div>`;
-  document.getElementById("plateA").innerHTML=plate(a,A,cheaper===a);
-  document.getElementById("plateB").innerHTML=plate(b,B,cheaper===b);
+  document.getElementById("plateA").innerHTML=plate(a,A,sA,cheaper===a);
+  document.getElementById("plateB").innerHTML=plate(b,B,sB,cheaper===b);
 
-  // venn: offset shrinks as overlap grows
-  const offset=12+(100-pct)*0.58; // 12px (near-identical) to 70px (disjoint)
+  // tale of the tape — ✓ marks the better number
+  const costA=feeCost30(A.er),costB=feeCost30(B.er);
+  const tapeRows=[
+    ["Expense ratio",A.er.toFixed(2)+"%",B.er.toFixed(2)+"%",A.er<B.er?0:B.er<A.er?1:null],
+    ["Fees taken from $10k over 30 yrs","$"+costA.toLocaleString(),"$"+costB.toLocaleString(),costA<costB?0:costB<costA?1:null],
+    ["Top-10 concentration (lower = broader)",sA.top10>0?sA.top10.toFixed(0)+"%":"—",sB.top10>0?sB.top10.toFixed(0)+"%":"—",sA.top10&&sB.top10?(sA.top10<sB.top10?0:sB.top10<sA.top10?1:null):null],
+    ["Largest single bet",sA.largestT?`${sA.largestT} ${sA.largest.toFixed(1)}%`:"—",sB.largestT?`${sB.largestT} ${sB.largest.toFixed(1)}%`:"—",sA.largest&&sB.largest?(sA.largest<sB.largest?0:sB.largest<sA.largest?1:null):null],
+    ["Sector breadth (≥1% weight)",sA.breadth||"—",sB.breadth||"—",sA.breadth>sB.breadth?0:sB.breadth>sA.breadth?1:null]
+  ];
+  document.getElementById("cmpTape").innerHTML=tapeRows.map(([lab,va,vb,w])=>`
+    <div class="tape-row">
+      <span class="tl">${va}${w===0?'<span class="wtick">✓</span>':'<span class="wtick" style="visibility:hidden">✓</span>'}</span>
+      <span class="tm">${lab}</span>
+      <span class="tr2">${w===1?'<span class="wtick">✓</span>':'<span class="wtick" style="visibility:hidden">✓</span>'}${vb}</span>
+    </div>`).join("");
+
+  // venn
+  const offset=12+(100-pct)*0.58;
   document.getElementById("venn").innerHTML=`
     <span class="tick" style="left:8px;color:var(--green)">${a}</span>
     <span class="tick" style="right:8px;color:var(--ochre)">${b}</span>
     <div class="c ca" style="left:${170-75-offset}px"></div>
     <div class="c cb" style="left:${170-75+offset}px"></div>
     <div class="vlab" style="color:${col}">~${pct}%<small>shared, by weight</small></div>`;
+
+  // anatomy bar: a $100 split 50/50 across the pair
+  const uniq=(100-pct)/2;
+  document.getElementById("anatomyBar").innerHTML=`
+    <div class="an-a" style="width:${uniq}%">${uniq>=14?`only ${a}`:""}</div>
+    <div class="an-shared" style="width:${pct}%">${pct>=14?"same stocks, twice":""}</div>
+    <div class="an-b" style="width:${uniq}%">${uniq>=14?`only ${b}`:""}</div>`;
+  document.getElementById("anatomyCap").innerHTML=`<span>Every $100 split across both:</span><span><b>$${uniq.toFixed(0)}</b> unique ${a} · <b style="color:${col}">$${pct.toFixed(0)} doubled</b> · <b>$${uniq.toFixed(0)}</b> unique ${b}</span>`;
 
   const stamp=document.getElementById("cmpStamp");
   stamp.textContent=hi?"Redundant":med?"Overlapping":"Complementary";
@@ -1910,21 +1998,35 @@ function runCompare(){
     `Only ~${pct}% overlap. These genuinely diversify each other.`;
   document.getElementById("cmpVerdict").textContent="“"+verdict+"”";
 
+  // fee growth chart
+  const years=[0,5,10,15,20,25,30];
+  const grow=er=>years.map(y=>Math.round(10000*Math.pow(1+(7-er)/100,y)));
+  if(feeChartObj)feeChartObj.destroy();
+  feeChartObj=new Chart(document.getElementById("feeChart"),{
+    type:"line",
+    data:{labels:years.map(y=>y+"y"),datasets:[
+      {label:`${a} (${A.er.toFixed(2)}%)`,data:grow(A.er),borderColor:"#1e6f50",backgroundColor:"rgba(30,111,80,.06)",fill:true,tension:0,pointRadius:3,borderWidth:2.5},
+      {label:`${b} (${B.er.toFixed(2)}%)`,data:grow(B.er),borderColor:"#b07d2a",borderDash:A.er===B.er?[5,4]:[],tension:0,pointRadius:3,borderWidth:2}]},
+    options:{plugins:{legend:{position:"bottom",labels:{color:"#4a443a",font:{size:11},boxWidth:12}}},
+      scales:{y:{grid:{color:"#efe9de"},ticks:{color:"#4a443a",font:{family:"Menlo",size:10},callback:v=>"$"+(v/1000)+"k"}},x:{grid:{display:false},ticks:{color:"#4a443a",font:{size:10}}}}}
+  });
+
   const diff=Math.abs(A.er-B.er);
   if(diff>0.001){
-    const drag=Math.round(diff/0.06*18000/1000)*1000;
+    const endDiff=Math.abs(grow(A.er)[6]-grow(B.er)[6]);
     const exp=A.er>B.er?a:b,chp=A.er>B.er?b:a;
-    document.getElementById("cmpFee30").innerHTML=`Fee math: investing $500/month for 30 years at 7%, choosing ${exp} over ${chp} costs roughly <b>$${drag.toLocaleString()}</b> in fee drag${pct>85?" — for the same holdings":""}.`;
+    document.getElementById("cmpFee30").innerHTML=`Same $10,000, same market, different ticker: choosing <b>${exp}</b> over <b>${chp}</b> ends <b>$${endDiff.toLocaleString()}</b> poorer after 30 years${pct>85?" — for the same holdings":""}. With $500/month contributions the gap runs several times larger.`;
   }else{
-    document.getElementById("cmpFee30").textContent="Fees are effectively identical — pick on other merits.";
+    document.getElementById("cmpFee30").textContent="Fees are identical — the lines sit on top of each other. Pick on other merits.";
   }
 
   // butterfly sector chart
-  const allSecs=[...new Set([...Object.keys(A.sw),...Object.keys(B.sw)])];
-  const totA=Object.values(A.sw).reduce((x,y)=>x+y,0),totB=Object.values(B.sw).reduce((x,y)=>x+y,0);
+  const swA=A.sw||{},swB=B.sw||{};
+  const allSecs=[...new Set([...Object.keys(swA),...Object.keys(swB)])];
+  const totA=Object.values(swA).reduce((x,y)=>x+y,0)||1,totB=Object.values(swB).reduce((x,y)=>x+y,0)||1;
   let rows="";
-  allSecs.sort((x,y)=>((B.sw[y]||0)+(A.sw[y]||0))-((B.sw[x]||0)+(A.sw[x]||0))).forEach(s=>{
-    const wa=(A.sw[s]||0)/totA*100,wb=(B.sw[s]||0)/totB*100;
+  allSecs.sort((x,y)=>((swB[y]||0)+(swA[y]||0))-((swB[x]||0)+(swA[x]||0))).forEach(s=>{
+    const wa=(swA[s]||0)/totA*100,wb=(swB[s]||0)/totB*100;
     rows+=`<div class="bf-row">
       <span class="num bf-pl">${wa.toFixed(0)}%</span>
       <div class="bf-l"><i style="width:${wa}%"></i></div>
@@ -1934,10 +2036,53 @@ function runCompare(){
   });
   document.getElementById("cmpBars").innerHTML=`<div class="bf-head"><span style="text-align:right;color:var(--green)">${a}</span><span></span><span style="color:var(--ochre)">${b}</span></div>`+rows;
 
+  lastMatchup={a,b,pct,col:hexCol,label:hi?"REDUNDANT":med?"OVERLAPPING":"COMPLEMENTARY",verdict,
+    feeA:A.er,feeB:B.er,date:d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})};
+
   renderSharedHoldings(a,b,A,B);
   renderMitigation(a,b,A,B,pct,cheaper,diff);
   document.getElementById("cmpResults").classList.remove("hidden");
   document.getElementById("cmpResults").scrollIntoView({behavior:"smooth"});
+}
+
+function downloadMatchup(){
+  if(!lastMatchup){alert("Run a comparison first.");return;}
+  const M=lastMatchup,W=1000,H=560;
+  const c=document.createElement("canvas");c.width=W;c.height=H;
+  const x=c.getContext("2d");
+  x.fillStyle="#f7f3ec";x.fillRect(0,0,W,H);
+  x.strokeStyle="#16130e";x.lineWidth=4;x.strokeRect(14,14,W-28,H-28);
+  x.lineWidth=1.5;x.strokeRect(24,24,W-48,H-48);
+  x.fillStyle="#16130e";x.font="italic 700 38px Georgia";x.fillText("Overlap",60,92);
+  x.font="600 13px Helvetica";x.fillStyle="#4a443a";
+  x.fillText("THE MATCHUP — "+M.date.toUpperCase(),60,118);
+  x.strokeStyle="#16130e";x.lineWidth=2;x.beginPath();x.moveTo(60,136);x.lineTo(W-60,136);x.stroke();
+  x.fillStyle="#16130e";x.font="700 64px Menlo,monospace";x.textAlign="center";
+  x.fillText(M.a,W/2-220,230);
+  x.font="italic 700 34px Georgia";x.fillText("vs.",W/2,222);
+  x.font="700 64px Menlo,monospace";x.fillText(M.b,W/2+220,230);
+  x.font="600 15px Helvetica";x.fillStyle="#4a443a";
+  x.fillText(M.feeA.toFixed(2)+"% fee",W/2-220,262);
+  x.fillText(M.feeB.toFixed(2)+"% fee",W/2+220,262);
+  x.fillStyle=M.col;x.font="700 110px Georgia";
+  x.fillText("~"+M.pct+"%",W/2,392);
+  x.font="600 14px Helvetica";x.fillStyle="#4a443a";
+  x.fillText("OF THESE FUNDS IS THE SAME STOCKS, BY WEIGHT",W/2,420);
+  x.save();x.translate(W-165,180);x.rotate(-0.09);
+  x.strokeStyle=M.col;x.lineWidth=4;x.strokeRect(-95,-32,190,58);
+  x.fillStyle=M.col;x.font="800 26px Georgia";x.fillText(M.label,0,8);x.restore();
+  x.textAlign="left";x.fillStyle="#16130e";x.font="italic 19px Georgia";
+  const words=("“"+M.verdict+"”").split(" ");let line="",yy=468;
+  for(const w of words){
+    if(x.measureText(line+w).width>W-140){x.fillText(line,70,yy);yy+=26;line="";}
+    line+=w+" ";
+  }
+  x.fillText(line,70,yy);
+  x.strokeStyle="#16130e";x.lineWidth=2;x.beginPath();x.moveTo(60,H-52);x.lineTo(W-60,H-52);x.stroke();
+  x.font="600 13px Helvetica";x.fillStyle="#1e6f50";
+  x.fillText("Compare any two funds free — no account, holdings never leave your browser.",60,H-30);
+  const link=document.createElement("a");
+  link.download=`overlap-${M.a}-vs-${M.b}.png`;link.href=c.toDataURL("image/png");link.click();
 }
 
 function nameOf(t){return STOCKS[t]?STOCKS[t].n:(ETFS[t]?ETFS[t].n:t);}
@@ -1956,16 +2101,21 @@ function renderSharedHoldings(a,b,A,B){
   }
   const sumMin=shared.reduce((s,[,wa,wb])=>s+Math.min(wa,wb),0);
   const top=shared[0];
-  const rows=shared.map(([t,wa,wb])=>{
-    const both5050=((wa+wb)/2);
-    return `<tr><td><b class="mono">${t}</b> <span class="footnote">${nameOf(t)}</span></td>
-      <td class="num">${wa.toFixed(1)}%</td><td class="num">${wb.toFixed(1)}%</td>
-      <td class="num">${both5050.toFixed(1)}%</td></tr>`;
-  }).join("");
+  const maxW=Math.max(...shared.map(([,wa,wb])=>Math.max(wa,wb)));
+  const rows=shared.map(([t,wa,wb])=>`
+    <div class="sh-row">
+      <span class="sh-name"><b class="mono">${t}</b> <span class="footnote">${nameOf(t)}</span></span>
+      <div class="sh-l"><i style="width:${wa/maxW*100}%"></i></div>
+      <span class="num" style="text-align:right">${wa.toFixed(1)}%</span>
+      <div class="sh-r"><i style="width:${wb/maxW*100}%"></i></div>
+      <span class="num">${wb.toFixed(1)}%</span>
+    </div>`).join("");
   const uniqA=Object.keys(hA).filter(k=>hB[k]===undefined).slice(0,4);
   const uniqB=Object.keys(hB).filter(k=>hA[k]===undefined).slice(0,4);
   el.innerHTML=`
-    <table><thead><tr><th>Shared position</th><th>In ${a}</th><th>In ${b}</th><th>If you split 50/50</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="sh-row" style="font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)">
+      <span>Shared position</span><span style="text-align:right;color:var(--green)">in ${a} →</span><span></span><span style="color:var(--ochre)">← in ${b}</span><span></span>
+    </div>${rows}
     <div class="finding f-amber" style="margin-top:14px"><span class="tag">The receipt</span>
       Among top holdings alone, at least <b>${sumMin.toFixed(1)}%</b> of these funds is literally the same positions.
       Biggest double-up: <b>${top[0]}</b> — a 50/50 split of this pair puts <b>${((top[1]+top[2])/2).toFixed(1)}%</b> of your money in one company from just these two funds.</div>
