@@ -198,16 +198,31 @@
   .plate .pmeta b{display:block;font-size:16px;color:var(--ink);font-family:"SF Mono",Menlo,monospace}
   .plate.a{border-right:none}.plate.b{border-left:none}
   @media(max-width:700px){.plate.a,.plate.b{border:1.5px solid var(--ink)}}
-  .vs{display:flex;align-items:center;justify-content:center;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);background:var(--ink);color:var(--paper);font-family:Georgia,serif;font-style:italic;font-size:22px}
+  .vs{display:flex;align-items:center;justify-content:center;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);background:var(--paper2);color:var(--ink);font-family:Georgia,serif;font-style:italic;font-size:24px;font-weight:700}
   @media(max-width:700px){.vs{padding:8px;border:1.5px solid var(--ink)}}
   .venn-wrap{display:flex;flex-direction:column;align-items:center;padding:10px 0 4px}
   .venn{position:relative;width:340px;height:180px;max-width:100%}
   .venn .c{position:absolute;top:15px;width:150px;height:150px;border:1.5px solid var(--ink);border-radius:50%;mix-blend-mode:multiply}
   .venn .ca{background:rgba(30,111,80,.22)}
   .venn .cb{background:rgba(176,125,42,.25)}
-  .venn .vlab{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-family:"SF Mono",Menlo,monospace;font-weight:700;font-size:20px}
-  .venn .vlab small{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-family:-apple-system,sans-serif}
-  .venn .tick{position:absolute;top:0;font-family:"SF Mono",Menlo,monospace;font-size:13px;font-weight:700}
+  .venn .tick{position:absolute;top:0;font-family:"SF Mono",Menlo,monospace;font-size:18px;font-weight:700}
+  .venn-pct{text-align:center;font-family:Georgia,serif;font-size:44px;font-weight:700;letter-spacing:-1px;line-height:1;margin:6px 0 4px}
+  .venn-pct small{font-size:15px;color:var(--ink2);letter-spacing:0;font-weight:400}
+  .venn-exp{text-align:center;font-size:13px;color:var(--ink2);max-width:400px;margin:0 auto 6px;line-height:1.55}
+  .cmp-sel{padding:13px 16px;font-size:15px;font-weight:600;min-width:270px;font-family:"SF Mono",Menlo,monospace}
+  .pick-lab{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ink2);display:block;margin-bottom:5px}
+  .pick-info{border-left:3px solid var(--green);background:rgba(30,111,80,.05);padding:10px 14px;margin-top:14px;font-size:13.5px;line-height:1.6}
+  .pstat.click{cursor:pointer;transition:box-shadow .1s}
+  .pstat.click:hover{box-shadow:5px 5px 0 var(--paper2);border-color:var(--green)}
+  .pstat.click .pv:after{content:" →";color:var(--green);font-size:15px}
+  .btn-big{font-size:17px;padding:16px 32px;box-shadow:4px 4px 0 var(--green)}
+  .btn-big:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--green)}
+  .steps-strip{display:flex;border:1.5px solid var(--ink);background:#fff;margin-bottom:22px}
+  .step{flex:1;padding:14px 18px;border-right:1px solid var(--rule);font-size:13.5px;color:var(--ink2)}
+  .step:last-child{border-right:none}
+  .step .sn{font-family:Georgia,serif;font-style:italic;font-weight:700;color:var(--green);font-size:17px;margin-right:6px}
+  .step b{color:var(--ink)}
+  .free-stamp{display:inline-block;border:2px solid var(--green);color:var(--green);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;padding:4px 12px;transform:rotate(-3deg);margin-left:14px;vertical-align:middle}
   .bf-head{display:grid;grid-template-columns:1fr 120px 1fr;gap:10px;font-weight:700;font-size:13px;padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:10px}
   .bf-row{display:grid;grid-template-columns:44px 1fr 120px 1fr 44px;gap:8px;align-items:center;margin-bottom:7px;font-size:12.5px}
   .bf-lab{text-align:center;color:var(--ink2)}
@@ -495,14 +510,21 @@
 <section class="page" id="page-analyzer">
   <div class="wrap">
     <div class="page-head">
-      <div class="kicker">Tool No. 1</div>
-      <h1 class="serif">The Analyzer</h1>
-      <p>Enter tickers and amounts — dollars or percentages, either works. We look inside your ETFs, so 20% VOO counts as 1.2% Apple, 1.3% Microsoft, and so on.</p>
+      <div class="kicker">Tool No. 1 · The one everything else is built on</div>
+      <h1 class="serif">The Analyzer<span class="free-stamp">Free · No account</span></h1>
+      <p style="font-size:18px;margin-top:6px">You think you're diversified. <i class="serif">Let's check.</i></p>
+      <p style="margin-top:8px">Enter tickers and amounts — dollars or percentages, either works. We look <i>inside</i> your ETFs, so 20% VOO counts as 1.2% Apple, 1.3% Microsoft, and so on. Most people find out they own their favorite stock three more times than they thought.</p>
+    </div>
+
+    <div class="steps-strip">
+      <div class="step"><span class="sn">1.</span><b>Paste your holdings</b> — or load a sample and snoop first.</div>
+      <div class="step"><span class="sn">2.</span><b>Get the X-ray</b> — score, grade, findings, fees. Eight seconds.</div>
+      <div class="step"><span class="sn">3.</span><b>Fix it</b> — exact trades, what-ifs, and a shareable report card.</div>
     </div>
 
     <div class="panel">
-      <h2>Your holdings</h2>
-      <div class="sub">Nothing is uploaded or stored. The math runs in your browser.</div>
+      <h2>The intake form</h2>
+      <div class="sub">Nothing is uploaded or stored — the math runs entirely in your browser. Lie to us and you're only lying to yourself.</div>
       <div class="chips">
         <span class="smallcaps">Try a sample:</span>
         <button class="chip" onclick="loadPreset('reddit')">Typical Reddit portfolio</button>
@@ -529,7 +551,7 @@
         <input id="apiKey" type="text" placeholder="Finnhub API key — used to look up tickers we don't know">
         <div class="footnote" style="margin-top:6px">Without a key, we cover 60+ of the most commonly held stocks and funds. A pasted key is remembered on this device only.</div>
       </details>
-      <div style="margin-top:16px"><button class="btn" onclick="analyze()">Run the analysis</button></div>
+      <div style="margin-top:20px"><button class="btn btn-big" onclick="analyze()">X-ray my portfolio &rarr;</button></div>
     </div>
 
     <div id="results" class="hidden">
@@ -638,12 +660,14 @@
       <p>Two funds enter. One question gets answered: does owning both actually diversify you, or are you paying two fees for one portfolio?</p>
     </div>
     <div class="panel">
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-        <select id="cmpA"></select>
-        <span class="serif" style="font-style:italic;font-size:18px">vs.</span>
-        <select id="cmpB"></select>
-        <button class="btn" onclick="runCompare()">Compare</button>
+      <div class="footnote" style="margin-bottom:16px;max-width:640px"><b style="color:var(--ink)">New to this?</b> An ETF (exchange-traded fund) is one ticker that buys you a whole basket of stocks in a single purchase — VOO, for example, is ~500 companies at once. The catch: two ETFs can quietly hold the same stocks, which is what this tool exposes.</div>
+      <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap">
+        <div><span class="pick-lab">In this corner</span><select id="cmpA" class="cmp-sel"></select></div>
+        <span class="serif" style="font-style:italic;font-size:20px;padding-bottom:12px">vs.</span>
+        <div><span class="pick-lab">And in this corner</span><select id="cmpB" class="cmp-sel"></select></div>
+        <button class="btn" style="padding:13px 26px" onclick="runCompare()">Compare</button>
       </div>
+      <div class="pick-info" id="pickInfo"></div>
       <div class="footnote" style="margin-top:16px">Or jump to a matchup people ask about constantly:</div>
       <div class="matchups" id="matchups"></div>
     </div>
@@ -665,6 +689,8 @@
         <div class="panel">
           <div class="fig-tag">Fig. A — Shared anatomy</div>
           <div class="venn-wrap"><div class="venn" id="venn"></div></div>
+          <div class="venn-pct" id="vennPct"></div>
+          <div class="venn-exp" id="vennExp"></div>
           <div class="anatomy" id="anatomyBar"></div>
           <div class="an-cap" id="anatomyCap"></div>
           <div class="cmp-verdict-wrap" style="padding-top:16px">
@@ -710,17 +736,17 @@
     <div class="banner"><b>Preview with simulated data.</b> The production version pulls live volume from exchange feeds and mention counts from public forums, refreshed every 15 minutes.</div>
 
     <div class="pulse-strip">
-      <div class="pstat">
+      <div class="pstat click" onclick="location.hash='#/stock/PLTR'" title="Open PLTR">
         <div class="pk">Most crowded this week</div>
         <div class="pv mono">PLTR</div>
         <div class="pd">Chatter 92/100 with 3.1× volume. Retail-heavy names amplify both directions.</div>
       </div>
-      <div class="pstat">
+      <div class="pstat click" onclick="location.hash='#/stock/OXY'" title="Open OXY">
         <div class="pk">Quiet accumulation</div>
         <div class="pv mono">OXY</div>
         <div class="pd">2.3× volume, chatter only 34. Volume without chatter is often the more interesting signal.</div>
       </div>
-      <div class="pstat">
+      <div class="pstat click" onclick="location.hash='#/stock/NVDA'" title="Open NVDA">
         <div class="pk">Most duplicated holding</div>
         <div class="pv mono">NVDA</div>
         <div class="pd">Appears in VOO, QQQ, XLK, VUG &amp; SMH — the stock people own five times without noticing.</div>
@@ -1151,8 +1177,9 @@ let fundDataDate=null;
     const selA=document.getElementById("cmpA"),selB=document.getElementById("cmpB");
     if(selA&&selA.innerHTML){
       const va=selA.value,vb=selB.value;
-      const opts=Object.keys(ETFS).sort().map(t=>`<option value="${t}">${t} — ${ETFS[t].n}</option>`).join("");
+      const opts=cmpOptionsHTML();
       selA.innerHTML=opts;selB.innerHTML=opts;selA.value=va;selB.value=vb;
+      if(typeof updatePickInfo==="function")updatePickInfo();
     }
     fundDataDate=d.generated;
     const m=document.getElementById("masthead");
@@ -1899,12 +1926,42 @@ function auditAdvisor(){
 }
 
 /* ============ COMPARE ============ */
+function cmpGroupOf(F){
+  const c=F.cls||"";
+  if(c==="US Large Cap"||c==="US Total Market"||c==="Global")return"Broad index funds";
+  if(c.includes("Growth")||c.includes("Thematic"))return"Growth funds";
+  if(c.includes("Dividend")||c.includes("Value")||c.includes("Covered Call"))return"Dividend & value funds";
+  if(c==="International")return"International funds";
+  if(c==="Bonds")return"Bond funds";
+  if(c.includes("Sector")||c.includes("Semis")||c==="Commodity")return"Sector & specialty funds";
+  return"Other funds";
+}
+function cmpOptionsHTML(){
+  const groups={};
+  Object.keys(ETFS).sort().forEach(t=>{
+    const g=cmpGroupOf(ETFS[t]);
+    (groups[g]=groups[g]||[]).push(t);
+  });
+  const order=["Broad index funds","Growth funds","Dividend & value funds","International funds","Bond funds","Sector & specialty funds","Other funds"];
+  return order.filter(g=>groups[g]).map(g=>
+    `<optgroup label="${g}">`+groups[g].map(t=>`<option value="${t}">${t} · ${ETFS[t].n}</option>`).join("")+`</optgroup>`).join("");
+}
+function updatePickInfo(){
+  const a=document.getElementById("cmpA").value,b=document.getElementById("cmpB").value;
+  const A=ETFS[a],B=ETFS[b];
+  if(!A||!B)return;
+  const line=(t,F)=>`<b class="mono">${t}</b> — ${F.n}: a ${F.cls.toLowerCase()} fund charging ${F.er.toFixed(2)}%/yr${F.h&&Object.keys(F.h).length?`, biggest position ${Object.keys(F.h).sort((x,y)=>F.h[y]-F.h[x])[0]}`:""}.`;
+  document.getElementById("pickInfo").innerHTML=line(a,A)+"<br>"+line(b,B);
+}
 (function(){
-  const opts=Object.keys(ETFS).sort().map(t=>`<option value="${t}">${t} — ${ETFS[t].n}</option>`).join("");
+  const opts=cmpOptionsHTML();
   document.getElementById("cmpA").innerHTML=opts;
   document.getElementById("cmpB").innerHTML=opts;
   document.getElementById("cmpA").value="VOO";
   document.getElementById("cmpB").value="SPY";
+  document.getElementById("cmpA").addEventListener("change",updatePickInfo);
+  document.getElementById("cmpB").addEventListener("change",updatePickInfo);
+  updatePickInfo();
   const pairs=[["VOO","SPY"],["VOO","VTI"],["QQQ","QQQM"],["SCHD","VIG"],["QQQ","VUG"],["VTI","VT"],["VXUS","VEA"],["XLK","SMH"],["VOO","JEPI"],["BND","AGG"]];
   document.getElementById("matchups").innerHTML=pairs.map(([a,b])=>`<button class="chip" onclick="quickCompare('${a}','${b}')">${a} vs ${b}</button>`).join("");
 })();
@@ -1973,14 +2030,15 @@ function runCompare(){
       <span class="tr2">${w===1?'<span class="wtick">✓</span>':'<span class="wtick" style="visibility:hidden">✓</span>'}${vb}</span>
     </div>`).join("");
 
-  // venn
+  // venn — the % lives below the circles where it always fits
   const offset=12+(100-pct)*0.58;
   document.getElementById("venn").innerHTML=`
     <span class="tick" style="left:8px;color:var(--green)">${a}</span>
     <span class="tick" style="right:8px;color:var(--ochre)">${b}</span>
     <div class="c ca" style="left:${170-75-offset}px"></div>
-    <div class="c cb" style="left:${170-75+offset}px"></div>
-    <div class="vlab" style="color:${col}">~${pct}%<small>shared, by weight</small></div>`;
+    <div class="c cb" style="left:${170-75+offset}px"></div>`;
+  document.getElementById("vennPct").innerHTML=`<span style="color:${col}">~${pct}%</span> <small>identical</small>`;
+  document.getElementById("vennExp").innerHTML=`In plain English: put $100 into each fund, and about <b>$${pct} of each</b> ends up in the exact same stocks. The circles above are the two funds; the overlap is your doubled-up money.`;
 
   // anatomy bar: a $100 split 50/50 across the pair
   const uniq=(100-pct)/2;
@@ -2332,14 +2390,15 @@ async function renderStockPage(tk){
   document.getElementById("stkStats").innerHTML=
     `<div class="stat-cell"><div class="sk">Type</div><div class="sv" style="font-family:-apple-system,sans-serif;font-size:15px">${ETFS[tk]?ETFS[tk].cls+" fund":STOCKS[tk]?STOCKS[tk].s:"—"}</div></div>
      ${ETFS[tk]?`<div class="stat-cell"><div class="sk">Expense ratio</div><div class="sv">${ETFS[tk].er.toFixed(2)}%</div></div>`:""}
-     ${pr?`<div class="stat-cell"><div class="sk">Volume vs 30-day</div><div class="sv" style="color:${pr.vol>2.5?"var(--red)":"var(--green)"}">${pr.vol.toFixed(1)}×</div></div>
-     <div class="stat-cell"><div class="sk">Retail chatter</div><div class="sv">${pr.chat}<span style="font-size:12px;color:var(--ink2)">/100</span></div></div>`:""}
+     ${pr?`<div class="stat-cell"><div class="sk">Volume vs 30-day</div><div class="sv" style="color:${pr.vol>2.5?"var(--red)":"var(--green)"}">${pr.vol.toFixed(1)}×</div><div class="footnote" style="margin-top:3px">trading at ${pr.vol.toFixed(1)} times its usual pace</div></div>
+     <div class="stat-cell"><div class="sk">Retail chatter</div><div class="sv">${pr.chat}<span style="font-size:12px;color:var(--ink2)">/100</span></div><div class="footnote" style="margin-top:3px">forum mention intensity</div></div>`:""}
      <div class="stat-cell" id="stkCap"><div class="sk">Market cap</div><div class="sv"><span class="footnote">…</span></div></div>`;
   // crowd read
   const crowd=document.getElementById("stkCrowd");
   if(pr){
     const rising=pr.trend[7]>pr.trend[0];
-    crowd.innerHTML=`<div style="margin-bottom:10px">8-week attention trend: ${sparkline(pr.trend.map(x=>x*2),rising?"#1e6f50":"#b3382c")}</div>
+    crowd.innerHTML=`<div class="footnote" style="margin-bottom:12px;padding:10px 12px;background:var(--paper2);border-left:3px solid var(--ink)"><b style="color:var(--ink)">How to read these numbers:</b> Volume <b>${pr.vol.toFixed(1)}×</b> means ${tk} is changing hands at ${pr.vol.toFixed(1)} times its average daily pace over the past 30 days — a measure of <i>attention</i>, not of buying or selling (every trade has both). Chatter <b>${pr.chat}/100</b> scores how intensely retail forums are talking about it versus all other tickers this week; above ~80 means it's a crowded conversation.</div>
+      <div style="margin-bottom:10px">8-week attention trend: ${sparkline(pr.trend.map(x=>x*2),rising?"#1e6f50":"#b3382c")}</div>
       <div style="margin-bottom:10px">Chatter <span class="chatter" style="width:110px"><i style="width:${pr.chat}%;background:${pr.chat>80?"var(--red)":"var(--green)"}"></i></span> <b class="num">${pr.chat}/100</b> · Volume <b class="num">${pr.vol.toFixed(1)}×</b> normal</div>
       <div class="finding ${pr.chat>80&&pr.vol>2.5?"f-red":pr.chat>60||pr.vol>2?"f-amber":"f-ok"}"><span class="tag">Read</span>${pr.note}</div>
       <div class="footnote" style="margin-top:8px">Volume & chatter are simulated in this preview; live feeds land with the data pipeline.</div>`;
