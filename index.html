@@ -129,8 +129,9 @@
   .panel h2 .pno{color:var(--green);font-size:15px;margin-right:8px;font-style:italic}
   .panel .sub{font-size:13px;color:var(--ink2);margin-bottom:16px}
   .ledger{border:1.5px solid var(--ink)}
-  .ledger-head{display:grid;grid-template-columns:130px 150px 1fr 40px;background:var(--ink);color:var(--paper);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:8px 12px;gap:10px}
-  .hrow{display:grid;grid-template-columns:130px 150px 1fr 40px;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--rule)}
+  .ledger-head{display:grid;grid-template-columns:130px 150px 1fr 90px 40px;background:var(--ink);color:var(--paper);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:8px 12px;gap:10px}
+  .hrow{display:grid;grid-template-columns:130px 150px 1fr 90px 40px;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--rule)}
+  .row-share{text-align:right;font-weight:700;color:var(--ink2)}
   .hrow:nth-child(even){background:var(--paper)}
   .hrow input{border-width:1px;padding:8px 10px}
   .ticker-in{text-transform:uppercase;font-family:"SF Mono",Menlo,monospace;font-weight:600}
@@ -223,6 +224,13 @@
   .step .sn{font-family:Georgia,serif;font-style:italic;font-weight:700;color:var(--green);font-size:17px;margin-right:6px}
   .step b{color:var(--ink)}
   .free-stamp{display:inline-block;border:2px solid var(--green);color:var(--green);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;padding:4px 12px;transform:rotate(-3deg);margin-left:14px;vertical-align:middle}
+  .score-grid{display:grid;grid-template-columns:5fr 6fr;gap:36px;align-items:center}
+  @media(max-width:760px){.score-grid{grid-template-columns:1fr}}
+  .stk-chart{flex:1;min-width:180px;max-width:300px;padding:0 10px}
+  .pro-gate{border:2px solid var(--ink);background:#fff;box-shadow:8px 8px 0 var(--ochre);padding:36px 30px;text-align:center;margin-bottom:28px}
+  .pro-gate h3{font-family:Georgia,serif;font-size:28px;letter-spacing:-.5px;margin:8px 0 10px}
+  .pro-gate p{color:var(--ink2);font-size:14.5px;max-width:520px;margin:0 auto 20px}
+  .pro-locked{filter:blur(5px);pointer-events:none;user-select:none}
   .bf-head{display:grid;grid-template-columns:1fr 120px 1fr;gap:10px;font-weight:700;font-size:13px;padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:10px}
   .bf-row{display:grid;grid-template-columns:44px 1fr 120px 1fr 44px;gap:8px;align-items:center;margin-bottom:7px;font-size:12.5px}
   .bf-lab{text-align:center;color:var(--ink2)}
@@ -542,7 +550,7 @@
         </div>
       </details>
       <div class="ledger">
-        <div class="ledger-head"><span>Ticker</span><span>Amount ($ or %)</span><span>Identified as</span><span></span></div>
+        <div class="ledger-head"><span>Ticker</span><span>Amount ($ or %)</span><span>Identified as</span><span style="text-align:right">Share</span><span></span></div>
         <div id="rows"></div>
         <button class="addrow" onclick="addRow()">+ Add another holding</button>
       </div>
@@ -564,6 +572,8 @@
         </span>
       </div>
       <div class="panel" style="margin-top:0">
+        <div class="score-grid">
+        <div>
         <div class="score-flex">
           <div class="gauge">
             <svg viewBox="0 0 210 120">
@@ -581,7 +591,9 @@
           </div>
         </div>
         <div class="verdict" id="scoreVerdict"></div>
-        <div id="scoreBreakdown" style="max-width:520px;margin:18px auto 0"></div>
+        </div>
+        <div id="scoreBreakdown"></div>
+        </div>
       </div>
       <div class="grid2">
         <div class="panel">
@@ -851,6 +863,17 @@
       <h1 class="serif">My Desk</h1>
       <p>Where Pro subscribers keep an eye on a saved portfolio without staring at it. Below is a live-looking preview using a sample portfolio (the "Reddit special," post-rebalance).</p>
     </div>
+    <div id="proGate" class="pro-gate hidden">
+      <div class="smallcaps" style="color:var(--ochre)">Members only</div>
+      <h3>This desk works for Pro subscribers.</h3>
+      <p>Saved portfolios watched daily. Drift &amp; crowding alerts. Insider flags on <i>your</i> holdings. Stress tests, tax-loss scans, a new-money allocator, and an advisor lie-detector. $8/month or $72/year — about what one expense-ratio mistake costs you anyway.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a class="btn" href="#/pricing">See Pro pricing</a>
+        <button class="btn btn-outline" onclick="unlockPro()">Unlock the early-edition preview — free</button>
+      </div>
+      <p class="footnote" style="margin-top:16px">During the early edition, the full preview is free while payments get wired up. Kick every tire.</p>
+    </div>
+    <div id="proContent">
     <div class="banner"><b>Simulated preview.</b> In production this page tracks <i>your</i> saved portfolio: alerts fire when drift, crowding, or insider activity touches something you own.</div>
 
     <div class="grid2">
@@ -953,6 +976,7 @@
       <div class="serif" style="font-size:24px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px">This desk could be watching your portfolio.</div>
       <p class="footnote" style="margin-bottom:18px">Save a portfolio once; we handle the vigilance. $8/month.</p>
       <a class="btn" href="#/pricing">See pricing</a>
+    </div>
     </div>
   </div>
 </section>
@@ -1235,7 +1259,10 @@ function route(){
   if(ddBtn)ddBtn.classList.toggle("active",page==="analyzer"||page==="compare");
   const dd=document.getElementById("ddAnalyzer");
   if(dd)dd.classList.remove("open");
-  if(page==="dashboard"&&!histChartDone){histChartDone=true;renderHistChart();runStress("gfc");}
+  if(page==="dashboard"){
+    applyProGate();
+    if(!histChartDone){histChartDone=true;renderHistChart();runStress("gfc");}
+  }
   window.scrollTo(0,0);
 }
 function toggleDD(e){
@@ -1246,6 +1273,18 @@ document.addEventListener("click",e=>{
   const dd=document.getElementById("ddAnalyzer");
   if(dd&&!e.target.closest("#ddAnalyzer"))dd.classList.remove("open");
 });
+function applyProGate(){
+  let pro=false;
+  try{pro=localStorage.getItem("overlap_pro")==="1";}catch(e){}
+  const gate=document.getElementById("proGate"),content=document.getElementById("proContent");
+  if(!gate||!content)return;
+  gate.classList.toggle("hidden",pro);
+  content.classList.toggle("pro-locked",!pro);
+}
+function unlockPro(){
+  try{localStorage.setItem("overlap_pro","1");}catch(e){}
+  applyProGate();
+}
 function renderHistChart(){
   new Chart(document.getElementById("histChart"),{
     type:"line",
@@ -1300,21 +1339,33 @@ async function refreshTape(){
 })();
 
 /* ============ ANALYZER ============ */
+function updateShares(){
+  const rows=[...document.querySelectorAll("#rows .hrow")];
+  const vals=rows.map(r=>parseFloat(r.querySelector(".amt-in").value)||0);
+  const total=vals.reduce((a,b)=>a+b,0);
+  rows.forEach((r,i)=>{
+    const el=r.querySelector(".row-share");
+    if(el)el.textContent=total>0&&vals[i]>0?(vals[i]/total*100).toFixed(0)+"%":"—";
+  });
+}
 function addRow(t="",a=""){
   const div=document.createElement("div");div.className="hrow";
   div.innerHTML=`<input class="ticker-in" placeholder="e.g. VOO" value="${t}">
     <input class="amt-in" type="number" min="0" placeholder="$ or %" value="${a}">
     <span class="row-info">—</span>
-    <button class="btn-x" title="Remove" onclick="this.parentElement.remove()">&times;</button>`;
+    <span class="row-share num">—</span>
+    <button class="btn-x" title="Remove" onclick="this.parentElement.remove();updateShares()">&times;</button>`;
   document.getElementById("rows").appendChild(div);
+  updateShares();
 }
 const PRESETS={
   reddit:[["AAPL",25],["TSLA",20],["NVDA",20],["VOO",20],["QQQ",15]],
   triple:[["VOO",40],["SPY",30],["VTI",30]],
   balanced:[["VTI",40],["VXUS",20],["BND",20],["SCHD",10],["VNQ",10]]
 };
-function loadPreset(k){document.getElementById("rows").innerHTML="";PRESETS[k].forEach(([t,a])=>addRow(t,a));}
+function loadPreset(k){document.getElementById("rows").innerHTML="";PRESETS[k].forEach(([t,a])=>addRow(t,a));updateShares();}
 loadPreset("reddit");
+document.getElementById("rows").addEventListener("input",updateShares);
 
 let sectorChart=null;
 async function lookupViaApi(tk,key){
@@ -2377,22 +2428,29 @@ function stkExposureOf(tk){
   const viaFunds=inside.reduce((s,[,w])=>s+w,0);
   return{direct,inside,totalPct:direct+viaFunds};
 }
+let stkChartObj=null;
 async function renderStockPage(tk){
   tk=(tk||"").toUpperCase();
   if(!tk){location.hash="#/pulse";return;}
   currentStock=tk;
+  if(stkChartObj){stkChartObj.destroy();stkChartObj=null;}
   const known=STOCKS[tk]||ETFS[tk];
   const pr=PULSE.find(r=>r.t===tk);
   // immediate skeleton from built-in data
   document.getElementById("stkHead").innerHTML=
     `<div><div class="stk-tk">${tk}</div><div class="stk-name">${known?known.n:"Looking up…"}</div></div>
-     <div class="stk-price" id="stkPrice"><span class="footnote">fetching live quote…</span></div>`;
+     <div class="stk-chart"><canvas id="stkChart" height="58"></canvas><div class="footnote" id="stkChartNote" style="text-align:center;margin-top:2px"></div></div>
+     <div class="stk-price" id="stkPrice" style="margin-left:0"><span class="footnote">fetching live quote…</span></div>`;
   document.getElementById("stkStats").innerHTML=
     `<div class="stat-cell"><div class="sk">Type</div><div class="sv" style="font-family:-apple-system,sans-serif;font-size:15px">${ETFS[tk]?ETFS[tk].cls+" fund":STOCKS[tk]?STOCKS[tk].s:"—"}</div></div>
      ${ETFS[tk]?`<div class="stat-cell"><div class="sk">Expense ratio</div><div class="sv">${ETFS[tk].er.toFixed(2)}%</div></div>`:""}
      ${pr?`<div class="stat-cell"><div class="sk">Volume vs 30-day</div><div class="sv" style="color:${pr.vol>2.5?"var(--red)":"var(--green)"}">${pr.vol.toFixed(1)}×</div><div class="footnote" style="margin-top:3px">trading at ${pr.vol.toFixed(1)} times its usual pace</div></div>
      <div class="stat-cell"><div class="sk">Retail chatter</div><div class="sv">${pr.chat}<span style="font-size:12px;color:var(--ink2)">/100</span></div><div class="footnote" style="margin-top:3px">forum mention intensity</div></div>`:""}
-     <div class="stat-cell" id="stkCap"><div class="sk">Market cap</div><div class="sv"><span class="footnote">…</span></div></div>`;
+     <div class="stat-cell" id="stkCap"><div class="sk">Market cap</div><div class="sv"><span class="footnote">…</span></div></div>
+     <div class="stat-cell" id="stkPE"><div class="sk">P/E (trailing)</div><div class="sv"><span class="footnote">…</span></div></div>
+     <div class="stat-cell" id="stk52"><div class="sk">52-week range</div><div class="sv" style="font-size:14px"><span class="footnote">…</span></div></div>
+     <div class="stat-cell" id="stkDiv"><div class="sk">Dividend yield</div><div class="sv"><span class="footnote">…</span></div></div>
+     <div class="stat-cell" id="stkBeta"><div class="sk">Beta</div><div class="sv"><span class="footnote">…</span></div><div class="footnote" style="margin-top:3px">vs market: 1.0 = moves with it</div></div>`;
   // crowd read
   const crowd=document.getElementById("stkCrowd");
   if(pr){
@@ -2427,12 +2485,42 @@ async function renderStockPage(tk){
   try{
     const to=new Date(),from=new Date(Date.now()-14*86400000);
     const fmt=d=>d.toISOString().slice(0,10);
-    const [quote,profile,news]=await Promise.all([
+    const nowSec=Math.floor(Date.now()/1000);
+    const [quote,profile,news,metric,candle]=await Promise.all([
       fetch(`https://finnhub.io/api/v1/quote?symbol=${tk}&token=${key}`).then(r=>r.json()).catch(()=>null),
       fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${tk}&token=${key}`).then(r=>r.json()).catch(()=>null),
-      fetch(`https://finnhub.io/api/v1/company-news?symbol=${tk}&from=${fmt(from)}&to=${fmt(to)}&token=${key}`).then(r=>r.json()).catch(()=>null)
+      fetch(`https://finnhub.io/api/v1/company-news?symbol=${tk}&from=${fmt(from)}&to=${fmt(to)}&token=${key}`).then(r=>r.json()).catch(()=>null),
+      fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${tk}&metric=all&token=${key}`).then(r=>r.json()).catch(()=>null),
+      fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${tk}&resolution=D&from=${nowSec-120*86400}&to=${nowSec}&token=${key}`).then(r=>r.json()).catch(()=>null)
     ]);
     if(currentStock!==tk)return; // user navigated away
+    // fundamentals
+    if(metric&&metric.metric){
+      const m=metric.metric;
+      const set=(id,v)=>{const e=document.getElementById(id);if(e)e.querySelector(".sv").innerHTML=v;};
+      const pe=m.peTTM||m.peBasicExclExtraTTM;
+      set("stkPE",pe?(+pe).toFixed(1):"—");
+      const lo=m["52WeekLow"],hiW=m["52WeekHigh"];
+      set("stk52",lo&&hiW?`$${(+lo).toFixed(0)} – $${(+hiW).toFixed(0)}`:"—");
+      const dy=m.dividendYieldIndicatedAnnual||m.currentDividendYieldTTM;
+      set("stkDiv",dy&&+dy>0.01?(+dy).toFixed(2)+"%":"none");
+      set("stkBeta",m.beta?(+m.beta).toFixed(2):"—");
+    }
+    // mini price chart (120 days)
+    const noteEl=document.getElementById("stkChartNote");
+    if(candle&&candle.s==="ok"&&Array.isArray(candle.c)&&candle.c.length>5){
+      const closes=candle.c,up=closes[closes.length-1]>=closes[0];
+      if(stkChartObj)stkChartObj.destroy();
+      stkChartObj=new Chart(document.getElementById("stkChart"),{
+        type:"line",
+        data:{labels:closes.map((_,i)=>i),datasets:[{data:closes,borderColor:up?"#1e6f50":"#b3382c",backgroundColor:up?"rgba(30,111,80,.08)":"rgba(179,56,44,.08)",fill:true,borderWidth:1.8,pointRadius:0,tension:0}]},
+        options:{plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},animation:false,responsive:true,maintainAspectRatio:false}
+      });
+      const chg=(closes[closes.length-1]/closes[0]-1)*100;
+      if(noteEl)noteEl.innerHTML=`120 days: <b class="${chg>=0?"up":"hot"}">${chg>=0?"+":""}${chg.toFixed(1)}%</b>`;
+    }else if(noteEl){
+      noteEl.textContent="price history chart needs the paid data tier — coming with the v2 feed";
+    }
     if(quote&&quote.c>0){
       const up=(quote.dp||0)>=0;
       document.getElementById("stkPrice").innerHTML=
