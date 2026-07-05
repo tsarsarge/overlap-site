@@ -2428,29 +2428,22 @@ function stkExposureOf(tk){
   const viaFunds=inside.reduce((s,[,w])=>s+w,0);
   return{direct,inside,totalPct:direct+viaFunds};
 }
-let stkChartObj=null;
 async function renderStockPage(tk){
   tk=(tk||"").toUpperCase();
   if(!tk){location.hash="#/pulse";return;}
   currentStock=tk;
-  if(stkChartObj){stkChartObj.destroy();stkChartObj=null;}
   const known=STOCKS[tk]||ETFS[tk];
   const pr=PULSE.find(r=>r.t===tk);
   // immediate skeleton from built-in data
   document.getElementById("stkHead").innerHTML=
     `<div><div class="stk-tk">${tk}</div><div class="stk-name">${known?known.n:"Looking up…"}</div></div>
-     <div class="stk-chart"><canvas id="stkChart" height="58"></canvas><div class="footnote" id="stkChartNote" style="text-align:center;margin-top:2px"></div></div>
-     <div class="stk-price" id="stkPrice" style="margin-left:0"><span class="footnote">fetching live quote…</span></div>`;
+     <div class="stk-price" id="stkPrice"><span class="footnote">fetching live quote…</span></div>`;
   document.getElementById("stkStats").innerHTML=
     `<div class="stat-cell"><div class="sk">Type</div><div class="sv" style="font-family:-apple-system,sans-serif;font-size:15px">${ETFS[tk]?ETFS[tk].cls+" fund":STOCKS[tk]?STOCKS[tk].s:"—"}</div></div>
      ${ETFS[tk]?`<div class="stat-cell"><div class="sk">Expense ratio</div><div class="sv">${ETFS[tk].er.toFixed(2)}%</div></div>`:""}
      ${pr?`<div class="stat-cell"><div class="sk">Volume vs 30-day</div><div class="sv" style="color:${pr.vol>2.5?"var(--red)":"var(--green)"}">${pr.vol.toFixed(1)}×</div><div class="footnote" style="margin-top:3px">trading at ${pr.vol.toFixed(1)} times its usual pace</div></div>
      <div class="stat-cell"><div class="sk">Retail chatter</div><div class="sv">${pr.chat}<span style="font-size:12px;color:var(--ink2)">/100</span></div><div class="footnote" style="margin-top:3px">forum mention intensity</div></div>`:""}
-     <div class="stat-cell" id="stkCap"><div class="sk">Market cap</div><div class="sv"><span class="footnote">…</span></div></div>
-     <div class="stat-cell" id="stkPE"><div class="sk">P/E (trailing)</div><div class="sv"><span class="footnote">…</span></div></div>
-     <div class="stat-cell" id="stk52"><div class="sk">52-week range</div><div class="sv" style="font-size:14px"><span class="footnote">…</span></div></div>
-     <div class="stat-cell" id="stkDiv"><div class="sk">Dividend yield</div><div class="sv"><span class="footnote">…</span></div></div>
-     <div class="stat-cell" id="stkBeta"><div class="sk">Beta</div><div class="sv"><span class="footnote">…</span></div><div class="footnote" style="margin-top:3px">vs market: 1.0 = moves with it</div></div>`;
+     <div class="stat-cell" id="stkCap"><div class="sk">Market cap</div><div class="sv"><span class="footnote">…</span></div></div>`;
   // crowd read
   const crowd=document.getElementById("stkCrowd");
   if(pr){
@@ -2485,42 +2478,12 @@ async function renderStockPage(tk){
   try{
     const to=new Date(),from=new Date(Date.now()-14*86400000);
     const fmt=d=>d.toISOString().slice(0,10);
-    const nowSec=Math.floor(Date.now()/1000);
-    const [quote,profile,news,metric,candle]=await Promise.all([
+    const [quote,profile,news]=await Promise.all([
       fetch(`https://finnhub.io/api/v1/quote?symbol=${tk}&token=${key}`).then(r=>r.json()).catch(()=>null),
       fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${tk}&token=${key}`).then(r=>r.json()).catch(()=>null),
-      fetch(`https://finnhub.io/api/v1/company-news?symbol=${tk}&from=${fmt(from)}&to=${fmt(to)}&token=${key}`).then(r=>r.json()).catch(()=>null),
-      fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${tk}&metric=all&token=${key}`).then(r=>r.json()).catch(()=>null),
-      fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${tk}&resolution=D&from=${nowSec-120*86400}&to=${nowSec}&token=${key}`).then(r=>r.json()).catch(()=>null)
+      fetch(`https://finnhub.io/api/v1/company-news?symbol=${tk}&from=${fmt(from)}&to=${fmt(to)}&token=${key}`).then(r=>r.json()).catch(()=>null)
     ]);
     if(currentStock!==tk)return; // user navigated away
-    // fundamentals
-    if(metric&&metric.metric){
-      const m=metric.metric;
-      const set=(id,v)=>{const e=document.getElementById(id);if(e)e.querySelector(".sv").innerHTML=v;};
-      const pe=m.peTTM||m.peBasicExclExtraTTM;
-      set("stkPE",pe?(+pe).toFixed(1):"—");
-      const lo=m["52WeekLow"],hiW=m["52WeekHigh"];
-      set("stk52",lo&&hiW?`$${(+lo).toFixed(0)} – $${(+hiW).toFixed(0)}`:"—");
-      const dy=m.dividendYieldIndicatedAnnual||m.currentDividendYieldTTM;
-      set("stkDiv",dy&&+dy>0.01?(+dy).toFixed(2)+"%":"none");
-      set("stkBeta",m.beta?(+m.beta).toFixed(2):"—");
-    }
-    // mini price chart (120 days)
-    const noteEl=document.getElementById("stkChartNote");
-    if(candle&&candle.s==="ok"&&Array.isArray(candle.c)&&candle.c.length>5){
-      const closes=candle.c,up=closes[closes.length-1]>=closes[0];
-      if(stkChartObj)stkChartObj.destroy();
-      stkChartObj=new Chart(document.getElementById("stkChart"),{
-        type:"line",
-        data:{labels:closes.map((_,i)=>i),datasets:[{data:closes,borderColor:up?"#1e6f50":"#b3382c",backgroundColor:up?"rgba(30,111,80,.08)":"rgba(179,56,44,.08)",fill:true,borderWidth:1.8,pointRadius:0,tension:0}]},
-        options:{plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},animation:false,responsive:true,maintainAspectRatio:false}
-      });
-      const chg=(closes[closes.length-1]/closes[0]-1)*100;
-      if(noteEl)noteEl.innerHTML=`120 days: <b class="${chg>=0?"up":"hot"}">${chg>=0?"+":""}${chg.toFixed(1)}%</b>`;
-    }else if(noteEl){
-      noteEl.textContent="price history chart needs the paid data tier — coming with the v2 feed";
-    }
     if(quote&&quote.c>0){
       const up=(quote.dp||0)>=0;
       document.getElementById("stkPrice").innerHTML=
