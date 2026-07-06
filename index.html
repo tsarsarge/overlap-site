@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Overlap — You probably own the same stock five times</title>
+<meta name="description" content="Free portfolio X-ray. Overlap looks through your ETFs, adds up what you actually own, and shows your true concentration, fund overlap, and fees — in about eight seconds. No account; your holdings never leave your browser.">
+<link rel="canonical" href="https://overlap.tools/">
+<meta property="og:title" content="Overlap — You probably own the same stock five times">
+<meta property="og:description" content="Free portfolio X-ray: true concentration, ETF overlap, and fee audit in eight seconds. No account needed.">
+<meta property="og:url" content="https://overlap.tools/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Overlap — You probably own the same stock five times">
+<meta name="twitter:description" content="Free portfolio X-ray: true concentration, ETF overlap, and fee audit in eight seconds.">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root{
@@ -436,7 +445,20 @@
         <div class="rs-h">Want a public roast?</div>
         <p>Submit your portfolio for a future <a href="#/learn">Portfolio of the Week</a>. We anonymize everything — usernames, dollar amounts, the works — and you get the full Pro treatment for free, in front of everyone.</p>
       </div>
-      <a class="btn btn-outline" href="mailto:roast@overlap.example?subject=Roast%20my%20portfolio" style="white-space:nowrap">Submit for dissection</a>
+      <a class="btn btn-outline" href="mailto:overlaptools@gmail.com?subject=Roast%20my%20portfolio" style="white-space:nowrap">Submit for dissection</a>
+    </div>
+    <div class="roast-strip" style="margin-top:16px;border-style:solid">
+      <div>
+        <div class="rs-h">The Weekly Dissection</div>
+        <p>One portfolio publicly fixed, one crowded trade flagged, one fee caught overcharging. Free, weekly, unsubscribe whenever.</p>
+      </div>
+      <form id="subForm" action="https://formsubmit.co/overlaptools@gmail.com" method="POST" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="email" name="email" required placeholder="you@example.com" style="min-width:230px">
+        <input type="hidden" name="_subject" value="New Overlap subscriber">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="hidden" name="_next" value="https://overlap.tools/?subscribed=1">
+        <button class="btn" type="submit" style="white-space:nowrap">Sign me up</button>
+      </form>
     </div>
   </div>
 
@@ -1003,7 +1025,7 @@
       <div class="submit-box">
         <b class="serif" style="font-size:17px">Want a public roast?</b><br>
         Submit your portfolio for a future Portfolio of the Week. We anonymize everything — usernames, dollar amounts, the works — and you get the full Pro treatment for free, in front of everyone.
-        <div style="margin-top:12px"><a class="btn btn-outline" href="mailto:roast@overlap.example?subject=Roast%20my%20portfolio" style="padding:9px 18px;font-size:13.5px">Submit for dissection</a></div>
+        <div style="margin-top:12px"><a class="btn btn-outline" href="mailto:overlaptools@gmail.com?subject=Roast%20my%20portfolio" style="padding:9px 18px;font-size:13.5px">Submit for dissection</a></div>
       </div>
     </div>
     <div id="articleView" class="hidden">
@@ -1050,7 +1072,7 @@
       </div>
       <div>
         <div class="smallcaps" style="margin-bottom:8px">Company</div>
-        <p class="footnote"><a href="#/learn">Field Notes</a><br><a href="#/pricing">Pricing</a><br><a href="mailto:hello@overlap.example">Contact</a></p>
+        <p class="footnote"><a href="#/learn">Field Notes</a><br><a href="#/pricing">Pricing</a><br><a href="mailto:overlaptools@gmail.com">Contact</a></p>
       </div>
     </div>
     <p class="footnote" style="margin-top:28px;padding-top:14px;border-top:1px solid var(--rule)">&copy; 2026 Overlap. Set in Georgia, on purpose. P.S. — if you found a bug, that's a free month of Pro. Email us.</p>
@@ -1283,6 +1305,13 @@ async function refreshTape(){
   const day=Math.floor(Date.now()/86400000);
   const n=14203+(day%97)*37+new Date().getHours()*3;
   document.getElementById("homeStats").innerHTML=`<b class="num">${n.toLocaleString()}</b> portfolios X-rayed so far · most redundant pair today: <b class="mono">VOO &harr; SPY</b>, caught ${182+day%41} times`;
+  // post-subscribe thanks
+  try{
+    if(location.search.includes("subscribed=1")){
+      const f=document.getElementById("subForm");
+      if(f)f.innerHTML=`<b style="color:var(--green);font-size:15px">You're in.</b>&nbsp;<span class="footnote">First dissection lands this week.</span>`;
+    }
+  }catch(e){}
 })();
 
 /* ============ ANALYZER ============ */
@@ -1550,7 +1579,7 @@ function downloadCard(){
   // footer
   x.strokeStyle="#16130e";x.lineWidth=2;x.beginPath();x.moveTo(60,H-90);x.lineTo(W-60,H-90);x.stroke();
   x.font="600 15px Helvetica";x.fillStyle="#1e6f50";
-  x.fillText("What's YOUR score? Free look-through analysis — no account, holdings never leave your browser.",60,H-58);
+  x.fillText("What's YOUR score? overlap.tools — free, no account, holdings never leave your browser.",60,H-58);
   const a=document.createElement("a");
   a.download="overlap-report-card.png";a.href=c.toDataURL("image/png");a.click();
 }
@@ -2136,7 +2165,7 @@ function downloadMatchup(){
   x.fillText(line,70,yy);
   x.strokeStyle="#16130e";x.lineWidth=2;x.beginPath();x.moveTo(60,H-52);x.lineTo(W-60,H-52);x.stroke();
   x.font="600 13px Helvetica";x.fillStyle="#1e6f50";
-  x.fillText("Compare any two funds free — no account, holdings never leave your browser.",60,H-30);
+  x.fillText("Compare any two funds free at overlap.tools — no account, holdings never leave your browser.",60,H-30);
   const link=document.createElement("a");
   link.download=`overlap-${M.a}-vs-${M.b}.png`;link.href=c.toDataURL("image/png");link.click();
 }
