@@ -745,8 +745,6 @@
       <h1 class="serif">Market Pulse</h1>
       <p>Where retail attention is concentrating this week — unusual trading volume and crowd chatter. Attention is not a buy signal. Usually it's the opposite.</p>
     </div>
-    <div class="banner"><b>Preview with simulated data.</b> The production version pulls live volume from exchange feeds and mention counts from public forums, refreshed every 15 minutes.</div>
-
     <div class="pulse-strip">
       <div class="pstat click" onclick="location.hash='#/stock/PLTR'" title="Open PLTR">
         <div class="pk">Most crowded this week</div>
@@ -818,39 +816,25 @@
     <div class="page-head">
       <div class="kicker">The Standings</div>
       <h1 class="serif">Leaderboards</h1>
-      <p>Anonymized portfolios from the community, ranked. Vote for the ones that deserve the spotlight — and learn from the ones that deserve the Hall of Shame.</p>
-    </div>
-    <div class="banner"><b>Simulated preview.</b> In production, rankings rebuild nightly from opted-in community portfolios, and long-haul returns are verified through broker sync — no screenshots, no lying.</div>
-    <div class="banner" id="yourRank" style="border-color:var(--green);background:rgba(30,111,80,.06)"></div>
-
-    <div class="game-card">
-      <div class="kicker" style="color:var(--ochre)">Parlor game</div>
-      <h2 class="serif" style="font-size:24px;letter-spacing:-.4px;margin-bottom:4px">Guess the Score</h2>
-      <p class="footnote">A real portfolio shape from our case files. How diversified do <i>you</i> think it is?</p>
-      <div class="game-holdings" id="gameHoldings"></div>
-      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
-        <input type="range" min="0" max="100" value="50" class="game-slider" id="gameSlider" style="flex:1;min-width:200px" oninput="document.getElementById('gameGuess').textContent=this.value">
-        <span>Your guess: <span class="guess-readout" id="gameGuess">50</span></span>
-        <button class="btn" onclick="revealScore()">Lock it in</button>
-      </div>
-      <div class="game-reveal hidden" id="gameReveal"></div>
+      <p>Freshly wiped for launch. Rate your portfolio below, claim a handle, and put your score on the board — rankings build as people submit.</p>
     </div>
 
-    <div class="lb-tabs" id="lbTabs"></div>
     <div class="panel">
-      <h2 id="lbTitle"></h2>
-      <div class="sub" id="lbSub"></div>
-      <table>
-        <thead><tr><th></th><th>Investor</th><th>Portfolio</th><th id="lbMetricHead"></th><th>Badges</th><th>Respect</th></tr></thead>
-        <tbody id="lbRows"></tbody>
-      </table>
-      <div class="footnote" style="margin-top:14px" id="lbFoot"></div>
+      <h2>Rate my portfolio</h2>
+      <div class="sub">Enter what you hold and how much — dollars or percentages. Scored 0–100 by the same engine as the Analyzer.</div>
+      <div class="ledger" style="margin-bottom:16px">
+        <div class="ledger-head"><span>Ticker</span><span>Amount ($ or %)</span><span>Identified as</span><span style="text-align:right">Share</span><span></span></div>
+        <div id="boardRows"></div>
+        <button class="addrow" onclick="addBoardRow()">+ Add another holding</button>
+      </div>
+      <button class="btn" onclick="rateForBoard()">Rate it</button>
+      <div id="boardResult" class="hidden" style="margin-top:20px"></div>
     </div>
 
-    <div class="panel" style="text-align:center;padding:32px">
-      <div class="serif" style="font-size:22px;font-weight:700;letter-spacing:-.4px;margin-bottom:6px">Think you belong up there?</div>
-      <p class="footnote" style="margin-bottom:16px">Run your analysis, opt in to the standings, and defend your allocation in public.</p>
-      <a class="btn" href="#/analyzer">Get scored</a>
+    <div class="panel">
+      <h2>The Standings</h2>
+      <div class="sub">Scores are computed, not claimed — anyone can rerun your math.</div>
+      <div id="boardList"></div>
     </div>
   </div>
 </section>
@@ -863,17 +847,13 @@
       <h1 class="serif">My Desk</h1>
       <p>Where Pro subscribers keep an eye on a saved portfolio without staring at it. Below is a live-looking preview using a sample portfolio (the "Reddit special," post-rebalance).</p>
     </div>
-    <div id="proGate" class="pro-gate hidden">
-      <div class="smallcaps" style="color:var(--ochre)">Members only</div>
-      <h3>This desk works for Pro subscribers.</h3>
-      <p>Saved portfolios watched daily. Drift &amp; crowding alerts. Insider flags on <i>your</i> holdings. Stress tests, tax-loss scans, a new-money allocator, and an advisor lie-detector. $8/month or $72/year — about what one expense-ratio mistake costs you anyway.</p>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <a class="btn" href="#/pricing">See Pro pricing</a>
-        <button class="btn btn-outline" onclick="unlockPro()">Unlock the early-edition preview — free</button>
-      </div>
-      <p class="footnote" style="margin-top:16px">During the early edition, the full preview is free while payments get wired up. Kick every tire.</p>
+    <div id="proGate" class="pro-gate">
+      <div class="smallcaps" style="color:var(--ochre)">Under construction</div>
+      <h3>The Pro Desk is coming soon.</h3>
+      <p>Saved portfolios watched daily, drift &amp; crowding alerts, insider flags on your holdings, stress tests, and tax tools — arriving once accounts and payments are wired up. Meanwhile, everything else on the site is free.</p>
+      <a class="btn" href="#/analyzer">Use the free tools</a>
     </div>
-    <div id="proContent">
+    <div id="proContent" style="display:none">
     <div class="banner"><b>Simulated preview.</b> In production this page tracks <i>your</i> saved portfolio: alerts fire when drift, crowding, or insider activity touches something you own.</div>
 
     <div class="grid2">
@@ -1041,34 +1021,11 @@
       <h1 class="serif">Free to see the problem.<br>Paid to fix it.</h1>
       <p>The diagnosis is always free. Pro is for people who want the treatment plan.</p>
     </div>
-    <div class="price-grid">
-      <div class="price-card">
-        <div class="tier">Free</div>
-        <div class="amount">$0</div>
-        <ul>
-          <li>Full portfolio analysis, unlimited runs</li>
-          <li>Look-through sector &amp; single-stock concentration</li>
-          <li>Fund overlap detection</li>
-          <li>Fee audit with cheaper alternatives</li>
-          <li>ETF head-to-head comparisons</li>
-          <li class="na">Rebalancing plan with exact trades</li>
-          <li class="na">Alerts when your holdings go crowded</li>
-        </ul>
-        <a class="btn btn-outline" href="#/analyzer">Start analyzing</a>
-      </div>
-      <div class="price-card featured">
-        <div class="tier">Pro</div>
-        <div class="amount">$8<small>/month, or $72/year</small></div>
-        <ul>
-          <li>Everything in Free</li>
-          <li>Full rebalancing notes: target weights &amp; exact trades</li>
-          <li>Tax-aware sell ordering</li>
-          <li>Market Pulse alerts on your holdings</li>
-          <li>Insider-transaction flags</li>
-          <li>Quarterly portfolio report, emailed</li>
-        </ul>
-        <a class="btn" href="#" onclick="alert('Checkout goes here.');return false">Start Pro — first report free</a>
-      </div>
+    <div class="pro-gate" style="margin-top:8px">
+      <div class="smallcaps" style="color:var(--ochre)">Coming soon</div>
+      <h3>Pro pricing lands with accounts &amp; payments.</h3>
+      <p>Planned: a Pro tier with the full rebalancing plan, drift &amp; crowding alerts, insider flags, and a quarterly emailed report. Until it arrives, <b>everything currently on the site is free</b> — analyzer, comparisons, all of it.</p>
+      <a class="btn" href="#/analyzer">Start with the free analysis</a>
     </div>
     <hr class="rule">
     <div style="max-width:680px">
@@ -1273,18 +1230,8 @@ document.addEventListener("click",e=>{
   const dd=document.getElementById("ddAnalyzer");
   if(dd&&!e.target.closest("#ddAnalyzer"))dd.classList.remove("open");
 });
-function applyProGate(){
-  let pro=false;
-  try{pro=localStorage.getItem("overlap_pro")==="1";}catch(e){}
-  const gate=document.getElementById("proGate"),content=document.getElementById("proContent");
-  if(!gate||!content)return;
-  gate.classList.toggle("hidden",pro);
-  content.classList.toggle("pro-locked",!pro);
-}
-function unlockPro(){
-  try{localStorage.setItem("overlap_pro","1");}catch(e){}
-  applyProGate();
-}
+function applyProGate(){/* Pro Desk is in coming-soon mode pre-launch; panels stay hidden */}
+function unlockPro(){applyProGate();}
 function renderHistChart(){
   new Chart(document.getElementById("histChart"),{
     type:"line",
@@ -2413,7 +2360,95 @@ function revealScore(){
   <button class="chip" style="margin-top:10px" onclick="gameIdx=(gameIdx+1)%GAME.length;renderGame()">Next portfolio &rarr;</button>`;
   el.classList.remove("hidden");
 }
-renderBoards();renderGame();renderYourRank();
+/* ---- fresh launch board: rate + submit (stored locally until accounts exist) ---- */
+let boardPending=null;
+function updateBoardShares(){
+  const rows=[...document.querySelectorAll("#boardRows .hrow")];
+  const vals=rows.map(r=>parseFloat(r.querySelector(".amt-in").value)||0);
+  const total=vals.reduce((a,b)=>a+b,0);
+  rows.forEach((r,i)=>{
+    const el=r.querySelector(".row-share");
+    if(el)el.textContent=total>0&&vals[i]>0?(vals[i]/total*100).toFixed(0)+"%":"—";
+  });
+}
+function addBoardRow(t="",a=""){
+  const div=document.createElement("div");div.className="hrow";
+  div.innerHTML=`<input class="ticker-in" placeholder="e.g. VOO" value="${t}">
+    <input class="amt-in" type="number" min="0" placeholder="$ or %" value="${a}">
+    <span class="row-info">—</span>
+    <span class="row-share num">—</span>
+    <button class="btn-x" onclick="this.parentElement.remove();updateBoardShares()">&times;</button>`;
+  document.getElementById("boardRows").appendChild(div);
+  updateBoardShares();
+}
+function rateForBoard(){
+  const rows=[...document.querySelectorAll("#boardRows .hrow")];
+  const holdings=[];
+  for(const r of rows){
+    const tk=r.querySelector(".ticker-in").value.trim().toUpperCase();
+    const amt=parseFloat(r.querySelector(".amt-in").value);
+    const info=r.querySelector(".row-info");
+    if(!tk||!amt||amt<=0)continue;
+    const e=classifyTicker(tk);e.amt=amt;
+    info.textContent=ETFS[tk]?ETFS[tk].n+" (fund)":STOCKS[tk]?STOCKS[tk].n+" · "+STOCKS[tk].s:"unknown — treated as Tech";
+    holdings.push(e);
+  }
+  if(holdings.length===0){alert("Add at least one holding with a ticker and an amount.");return;}
+  const P=computePortfolio(holdings);
+  const[grade,gcolor]=gradeFor(P.score);
+  const total=holdings.reduce((s,h)=>s+h.amt,0);
+  const port=holdings.map(h=>`${h.t} ${(h.amt/total*100).toFixed(0)}`).join(" · ");
+  boardPending={score:P.score,grade,port};
+  const lossLines=(P.pen||[]).slice(0,3).map(([l,p])=>`<div style="display:flex;justify-content:space-between;gap:14px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--rule)"><span style="color:var(--ink2)">${l}</span><span class="num" style="color:var(--red);font-weight:700">−${p}</span></div>`).join("");
+  document.getElementById("boardResult").innerHTML=`
+    <div style="display:flex;gap:26px;align-items:center;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div class="score-big" style="font-size:56px;color:${gcolor}">${P.score}<small style="font-size:18px">/100</small></div>
+        <div class="stamp" style="font-size:26px;color:${gcolor};margin-top:6px">${grade}</div>
+      </div>
+      <div style="flex:1;min-width:240px">
+        ${lossLines||'<div class="finding f-ok"><span class="tag">Clean</span>No deductions. Suspiciously competent.</div>'}
+        <div class="footnote" style="margin-top:8px">Want the full report — overlap, fees, fixes? <a href="#/analyzer">Run it through the Analyzer.</a></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:2px solid var(--ink)">
+      <input id="boardHandle" placeholder="Pick a handle, e.g. quietcompounder" style="min-width:240px">
+      <button class="btn" onclick="postToBoard()">Put it on the board</button>
+    </div>`;
+  document.getElementById("boardResult").classList.remove("hidden");
+}
+function getBoard(){try{return JSON.parse(localStorage.getItem("overlap_board")||"[]");}catch(e){return[];}}
+function postToBoard(){
+  if(!boardPending)return;
+  let h=(document.getElementById("boardHandle").value.trim()||"anon"+Math.floor(Math.random()*9999)).replace(/[^\w-]/g,"").slice(0,24);
+  const arr=getBoard();
+  arr.push({h,...boardPending,d:new Date().toISOString().slice(0,10)});
+  try{localStorage.setItem("overlap_board",JSON.stringify(arr));}catch(e){}
+  boardPending=null;
+  document.getElementById("boardResult").classList.add("hidden");
+  renderBoardList();
+}
+function renderBoardList(){
+  const el=document.getElementById("boardList");
+  if(!el)return;
+  const arr=getBoard().sort((a,b)=>b.score-a.score);
+  if(arr.length===0){
+    el.innerHTML=`<div class="pro-gate" style="box-shadow:6px 6px 0 var(--paper2);margin:0"><div class="smallcaps" style="color:var(--green)">Open board</div><h3 style="font-size:22px">Nobody here yet.</h3><p>The first name on the board is still available. Rate your portfolio above and take it.</p></div>`;
+    return;
+  }
+  el.innerHTML=`<table><thead><tr><th></th><th>Investor</th><th>Portfolio</th><th>Score</th><th>Grade</th><th>Posted</th></tr></thead><tbody>`+
+    arr.map((e,i)=>`<tr>
+      <td class="lb-rank ${i===0?"gold":""}">${i+1}${i===0?"st":i===1?"nd":i===2?"rd":"th"}</td>
+      <td class="lb-handle">${e.h}</td>
+      <td><span class="lb-holdings">${e.port}</span></td>
+      <td class="lb-metric" style="color:${e.score>=70?"var(--green)":e.score>=45?"var(--ochre)":"var(--red)"}">${e.score}</td>
+      <td><span class="stamp" style="font-size:14px;padding:1px 8px">${e.grade}</span></td>
+      <td class="footnote">${e.d}</td></tr>`).join("")+`</tbody></table>
+    <div class="footnote" style="margin-top:12px">Board entries live on this device for now; the shared global board arrives with accounts.</div>`;
+}
+addBoardRow();addBoardRow();addBoardRow();
+document.getElementById("boardRows").addEventListener("input",updateBoardShares);
+renderBoardList();
 
 /* ============ STOCK DETAIL PAGE ============ */
 let currentStock=null;
