@@ -447,19 +447,6 @@
       </div>
       <a class="btn btn-outline" href="mailto:overlaptools@gmail.com?subject=Roast%20my%20portfolio" style="white-space:nowrap">Submit for dissection</a>
     </div>
-    <div class="roast-strip" style="margin-top:16px;border-style:solid">
-      <div>
-        <div class="rs-h">The Weekly Dissection</div>
-        <p>One portfolio publicly fixed, one crowded trade flagged, one fee caught overcharging. Free, weekly, unsubscribe whenever.</p>
-      </div>
-      <form id="subForm" action="https://formsubmit.co/overlaptools@gmail.com" method="POST" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <input type="email" name="email" required placeholder="you@example.com" style="min-width:230px">
-        <input type="hidden" name="_subject" value="New Overlap subscriber">
-        <input type="hidden" name="_captcha" value="false">
-        <input type="hidden" name="_next" value="https://overlap.tools/?subscribed=1">
-        <button class="btn" type="submit" style="white-space:nowrap">Sign me up</button>
-      </form>
-    </div>
   </div>
 
   <div class="wrap">
@@ -838,7 +825,8 @@
     <div class="page-head">
       <div class="kicker">The Standings</div>
       <h1 class="serif">Leaderboards</h1>
-      <p>Freshly wiped for launch. Rate your portfolio below, claim a handle, and put your score on the board — rankings build as people submit.</p>
+      <p>Rate your portfolio, claim a handle, and put your score on the board. Argue about the results where arguments belong:</p>
+      <p style="margin-top:14px"><a class="btn" style="background:#5865F2" href="https://discord.gg/REPLACE-WITH-YOUR-INVITE" target="_blank" rel="noopener">Join our Discord &rarr;</a></p>
     </div>
 
     <div class="panel">
@@ -853,9 +841,21 @@
       <div id="boardResult" class="hidden" style="margin-top:20px"></div>
     </div>
 
+    <div class="footnote" style="margin:4px 0 12px">Founding entries below are illustrative composites that seed the boards — your submissions join <b>Best Diversified</b> the moment you post. Scores are computed, not claimed; anyone can rerun your math.</div>
+    <div class="lb-tabs" id="lbTabs"></div>
     <div class="panel">
-      <h2>The Standings</h2>
-      <div class="sub">Scores are computed, not claimed — anyone can rerun your math.</div>
+      <h2 id="lbTitle"></h2>
+      <div class="sub" id="lbSub"></div>
+      <table>
+        <thead><tr><th></th><th>Investor</th><th>Portfolio</th><th id="lbMetricHead"></th><th>Badges</th><th>Respect</th></tr></thead>
+        <tbody id="lbRows"></tbody>
+      </table>
+      <div class="footnote" style="margin-top:14px" id="lbFoot"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Your entries (this device)</h2>
+      <div class="sub">Stored locally until accounts arrive; the global board syncs then.</div>
       <div id="boardList"></div>
     </div>
   </div>
@@ -1072,7 +1072,7 @@
       </div>
       <div>
         <div class="smallcaps" style="margin-bottom:8px">Company</div>
-        <p class="footnote"><a href="#/learn">Field Notes</a><br><a href="#/pricing">Pricing</a><br><a href="mailto:overlaptools@gmail.com">Contact</a></p>
+        <p class="footnote"><a href="#/learn">Field Notes</a><br><a href="#/pricing">Pricing</a><br><a href="https://discord.gg/REPLACE-WITH-YOUR-INVITE" target="_blank" rel="noopener">Discord</a><br><a href="mailto:overlaptools@gmail.com">Contact</a></p>
       </div>
     </div>
     <p class="footnote" style="margin-top:28px;padding-top:14px;border-top:1px solid var(--rule)">&copy; 2026 Overlap. Set in Georgia, on purpose. P.S. — if you found a bug, that's a free month of Pro. Email us.</p>
@@ -1305,13 +1305,6 @@ async function refreshTape(){
   const day=Math.floor(Date.now()/86400000);
   const n=14203+(day%97)*37+new Date().getHours()*3;
   document.getElementById("homeStats").innerHTML=`<b class="num">${n.toLocaleString()}</b> portfolios X-rayed so far · most redundant pair today: <b class="mono">VOO &harr; SPY</b>, caught ${182+day%41} times`;
-  // post-subscribe thanks
-  try{
-    if(location.search.includes("subscribed=1")){
-      const f=document.getElementById("subForm");
-      if(f)f.innerHTML=`<b style="color:var(--green);font-size:15px">You're in.</b>&nbsp;<span class="footnote">First dissection lands this week.</span>`;
-    }
-  }catch(e){}
 })();
 
 /* ============ ANALYZER ============ */
@@ -2312,8 +2305,8 @@ const COMMUNITY=[
   {h:"u/triple_dipper",port:"VOO 35 · SPY 25 · IVV 25 · VTI 15",score:38,ytd:9.4,hold:6.7,fee:0.05,imp:-2,topPos:35,votes:311,badges:[],shame:"Four tickers, one index, ~95% the same fund. The archetype."}
 ];
 const BOARDS={
-  div:{title:"Best Diversified",sub:"Highest look-through diversification scores in the community.",metric:"Score",foot:"Score reflects sector spread, single-name caps, asset-class mix, and fund overlap.",
-    rows:()=>[...COMMUNITY].sort((a,b)=>b.score-a.score).slice(0,8),val:e=>`<span style="color:var(--green)">${e.score}</span><span style="font-size:11px;color:var(--ink2)">/100</span>`},
+  div:{title:"Best Diversified",sub:"Highest look-through diversification scores — founding entries plus fresh submissions.",metric:"Score",foot:"Score reflects sector spread, single-name caps, asset-class mix, and fund overlap.",
+    rows:()=>[...COMMUNITY,...getBoard().map(e=>({h:e.h,port:e.port,score:e.score,votes:0,badges:["New blood"],shame:""}))].sort((a,b)=>b.score-a.score).slice(0,10),val:e=>`<span style="color:var(--green)">${e.score}</span><span style="font-size:11px;color:var(--ink2)">/100</span>`},
   gains:{title:"Long-Haul Gains",sub:"Best YTD returns among investors with 3+ year average holding periods. Day traders need not apply.",metric:"YTD (avg hold)",foot:"Verified through broker sync in production. Returns without holding periods are just screenshots.",
     rows:()=>COMMUNITY.filter(e=>e.hold>=3).sort((a,b)=>b.ytd-a.ytd).slice(0,8),val:e=>`<span style="color:var(--green)">+${e.ytd.toFixed(1)}%</span> <span style="font-size:11px;color:var(--ink2)">(${e.hold.toFixed(1)}y)</span>`},
   improved:{title:"Most Improved",sub:"Biggest diversification score gains in the last 90 days. Redemption arcs welcome.",metric:"Δ Score (90d)",foot:"u/yolo_recovered came in at 25/100 in March holding 60% meme stocks. Look at them now.",
@@ -2336,13 +2329,14 @@ function renderBoards(){
   document.getElementById("lbRows").innerHTML=B.rows().map((e,i)=>{
     const idx=COMMUNITY.indexOf(e);
     const shameNote=curBoard==="shame"?`<div class="footnote" style="margin-top:4px;font-style:italic">"${e.shame}"</div>`:"";
+    const voteCell=idx>=0?`<button class="vote-btn ${votedSet.has(idx)?"voted":""}" onclick="voteFor(${idx})">&#9650; ${e.votes}</button>`:'<span class="footnote">just arrived</span>';
     return `<tr>
       <td class="lb-rank ${i===0?"gold":""}">${i+1}${i===0?"st":i===1?"nd":i===2?"rd":"th"}</td>
       <td class="lb-handle">${e.h}</td>
       <td><span class="lb-holdings">${e.port}</span>${shameNote}</td>
       <td class="lb-metric">${B.val(e)}</td>
       <td>${e.badges.map(b=>`<span class="badge">${b}</span>`).join("")||'<span class="footnote">—</span>'}</td>
-      <td><button class="vote-btn ${votedSet.has(idx)?"voted":""}" onclick="voteFor(${idx})">&#9650; ${e.votes}</button></td>
+      <td>${voteCell}</td>
     </tr>`;
   }).join("");
 }
@@ -2359,7 +2353,7 @@ function renderYourRank(){
   el.innerHTML=`<b>Your latest analysis: ${mine}/100.</b> That would place you <b>#${rank} of ${COMMUNITY.length+1}</b> on Best Diversified, ${neighbor}${below&&below.score<=mine?`, ahead of <b class="mono">${below.h}</b> (${below.score})`:""}. Opt in to defend it.`;
 }
 function voteFor(idx){
-  if(votedSet.has(idx))return;
+  if(idx<0||!COMMUNITY[idx]||votedSet.has(idx))return;
   votedSet.add(idx);COMMUNITY[idx].votes++;
   renderBoards();
 }
@@ -2456,6 +2450,7 @@ function postToBoard(){
   boardPending=null;
   document.getElementById("boardResult").classList.add("hidden");
   renderBoardList();
+  renderBoards(); // new entry joins Best Diversified immediately
 }
 function renderBoardList(){
   const el=document.getElementById("boardList");
@@ -2478,6 +2473,7 @@ function renderBoardList(){
 addBoardRow();addBoardRow();addBoardRow();
 document.getElementById("boardRows").addEventListener("input",updateBoardShares);
 renderBoardList();
+renderBoards();
 
 /* ============ STOCK DETAIL PAGE ============ */
 let currentStock=null;
